@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<transfers xmlns="aldi:transfer-01"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="aldi:transfer-01 http://static.spryker.com/transfer-01.xsd">
+
+    <transfer name="LeanPublishAndSynchronizationRequest">
+        <property name="queryClass" type="string"/>
+        <property name="elasticSearchIndex" type="string" />
+        <property name="publishDataWrite" type="array" singular="publishWriteData"/>
+        <property name="publishDataDelete" type="array" singular="publishDeleteData"/>
+        <property name="syncDataWrite" type="array" singular="syncWriteData" />
+        <property name="syncDataDelete" type="array" singular="syncDeleteData" />
+    </transfer>
+
+    <transfer name="LeanPublisherData">
+        <property name="dataSearch" type="string"/>
+        <property name="dataStorage" type="string"/>
+        <property name="keySearch" type="string"/>
+        <property name="keyStorage" type="string"/>
+        <property name="store" type="string"/>
+        <property name="reference" type="string"/>
+    </transfer>
+
+    <transfer name="LeanPublisherQueueMessageCollection">
+        <property name="validMessages" type="QueueReceiveMessage[]" singular="validMessage"/>
+        <property name="invalidMessages" type="QueueReceiveMessage[]" singular="invalidMessage"/>
+    </transfer>
+
+</transfers>
