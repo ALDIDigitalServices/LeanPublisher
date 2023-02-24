@@ -14,7 +14,7 @@
     },
     "autoload": {
         "psr-4": {
-            "ALDIDigitalServices\\LeanPublisher\\": "src/ALDIDigitalServices"
+            "ALDIDigitalServices\\": "src/ALDIDigitalServices"
         }
     },
     "autoload-dev": {
