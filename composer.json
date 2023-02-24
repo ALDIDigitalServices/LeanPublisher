@@ -2,6 +2,7 @@
     "name": "aldidigitalservices/lean-publisher",
     "description": "Lean publishing module for Spryker",
     "type": "library",
+    "license": "MIT",
     "require": {
         "spryker/kernel": "^3.65",
         "spryker/event": "^2.9",
