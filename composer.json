@@ -19,7 +19,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "SprykerTest\\": "tests/ALDIDigitalServicesTest/"
+            "ALDIDigitalServicesTest\\": "tests/ALDIDigitalServicesTest/"
         }
     },
     "minimum-stability": "dev"
