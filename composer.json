@@ -1,0 +1,36 @@
+{
+    "name": "aldidigitalservices/lean-publisher",
+    "description": "Lean publishing module for Spryker",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Christian Ankert",
+            "email": "christian.ankert@aldi-sued.com"
+        },
+        {
+            "name": "David Greiner",
+            "email": "hallo@davidgreiner.de"
+        }
+    ],
+    "license": "MIT",
+    "require": {
+        "spryker/kernel": "^3.65",
+        "spryker/event": "^2.9",
+        "spryker/search": "^8.19",
+        "spryker/storage": "^3.18",
+        "spryker/util-encoding": "^2.1",
+        "spryker/synchronization": "^1.13",
+        "spryker/propel": "^3.34"
+    },
+    "autoload": {
+        "psr-4": {
+            "ALDIDigitalServices\\": "src/ALDIDigitalServices/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "ALDIDigitalServicesTest\\": "tests/ALDIDigitalServicesTest/"
+        }
+    },
+    "minimum-stability": "dev"
+}
