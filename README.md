@@ -22,13 +22,23 @@ The Lean Publisher is meant to be used in connection with a spryker system.
 
 ## Integration
 
+### config_default.php
+add "ALDIDigitalServices" to your CORE_NAMESPACES in config_default.php
 
+```php
+$config[KernelConstants::CORE_NAMESPACES] = [
+	...
+	'ALDIDigitalServices',
+	...
+];
+
+```
 ### Console
 In `src/Pyz/Zed/Console/ConsoleDependencyProvider.php` please register
 
 ```php
 [...]
-new AldiPublisherResynchronizationConsole(),
+new LeanPublisherResynchronizationConsole(),
 [...]
 ```
 
@@ -39,7 +49,7 @@ In `src/Pyz/Zed/Event/EventDependencyProvider.php` register
 
 ```php
 [...]
-$eventSubscriberCollection->add(new AldiPublisherEventSubscriber());
+$eventSubscriberCollection->add(new LeanPublisherEventSubscriber());
 [...]
 ```
 
@@ -117,11 +127,11 @@ Create the new table via the console command:
 Interface | Description
 --- |---
 LeanPublisherEventHandlerPluginInterface | general Lean Publisher event handler interface. Needed for communication with the Lean Publisher.
-AldiPublisherStoragePublishPluginInterface | If you want to publish to storage, you need this interface.
-AldiPublisherSearchPublishPluginInterface | If you want to publish to search, you need this interface.
+LeanPublisherStoragePublishPluginInterface | If you want to publish to storage, you need this interface.
+LeanPublisherSearchPublishPluginInterface | If you want to publish to search, you need this interface.
 
 
-#### Step 6: Register the EventHandler 
+#### Step 6: Register the EventHandler
 In `src/Pyz/Zed/LeanPublisher/LeanPublisherDependencyProvider.php::getEventHandlerPlugins()`
 
 ```php
@@ -132,7 +142,7 @@ return [
 ];
 ```
 #### Step 7: Create and register a PublisherTriggerPlugin
-Create a PublishTriggerPlugin implementing **both** PublisherTriggerPluginInterface, LeanPublisherTriggerPluginInterface and set it up in 
+Create a PublishTriggerPlugin implementing **both** PublisherTriggerPluginInterface, LeanPublisherTriggerPluginInterface and set it up in
 `\Pyz\Zed\Publisher\PublisherDependencyProvider::getPublisherTriggerPlugins`
 
 ```php
