@@ -7,6 +7,7 @@
 
 namespace ALDIDigitalServices\Zed\LeanPublisher\Business;
 
+use Generated\Shared\Transfer\LeanPublisherResynchronizationRequestTransfer;
 use Spryker\Zed\Kernel\Business\AbstractFacade;
 
 /**
@@ -26,5 +27,36 @@ class LeanPublisherFacade extends AbstractFacade implements LeanPublisherFacadeI
     public function processLeanPublisherMessages(array $queueReceiveMessageTransfers): array
     {
         return $this->getFactory()->createLeanPublisherEventConsumer()->processLEanPublisherMessages($queueReceiveMessageTransfers);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @api
+     *
+     * @param \Generated\Shared\Transfer\LeanPublisherResynchronizationRequestTransfer $leanPublisherResynchronizationRequestTransfer
+     *
+     * @throws \Exception
+     * @return void
+     */
+    public function resynchronizePublishedData(LeanPublisherResynchronizationRequestTransfer $leanPublisherResynchronizationRequestTransfer): void
+    {
+        $this->getFactory()
+            ->createResynchronization()
+            ->resynchronizeData($leanPublisherResynchronizationRequestTransfer);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @api
+     *
+     * @return array
+     */
+    public function getAvailableResourceNames(): array
+    {
+        return $this->getFactory()
+            ->createEventHandlerPluginResolver()
+            ->getAvailableResourceNames();
     }
 }

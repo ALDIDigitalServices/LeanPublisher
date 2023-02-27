@@ -26,4 +26,8 @@
         <property name="invalidMessages" type="QueueReceiveMessage[]" singular="invalidMessage"/>
     </transfer>
 
+    <transfer name="LeanPublisherResynchronizationRequest">
+        <property name="resources" type="string[]" singular="resource" />
+        <property name="ids" type="int[]" singular="id" />
+    </transfer>
 </transfers>

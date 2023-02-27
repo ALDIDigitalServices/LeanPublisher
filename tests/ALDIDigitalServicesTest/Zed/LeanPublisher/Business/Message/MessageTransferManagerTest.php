@@ -7,13 +7,13 @@
 
 namespace ALDIDigitalServicesTest\Zed\LeanPublisher\Business\Message;
 
+use ALDIDigitalServicesTest\Zed\LeanPublisher\LeanPublisherBusinessTester;
 use ArrayObject;
 use Codeception\TestCase\Test;
 use Generated\Shared\Transfer\LeanPublisherQueueMessageCollectionTransfer;
 use Orm\Zed\Product\Persistence\Map\SpyProductAbstractTableMap;
 use Orm\Zed\ProductOffer\Persistence\Map\SpyProductOfferTableMap;
 use Pyz\Zed\Product\Dependency\ProductEvents;
-use ALDIDigitalServicesTest\Zed\LeanPublisher\LeanPublisherBusinessTester;
 use Spryker\Zed\ProductOffer\Dependency\ProductOfferEvents;
 
 /**

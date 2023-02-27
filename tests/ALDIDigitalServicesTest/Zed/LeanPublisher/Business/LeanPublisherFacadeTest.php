@@ -10,9 +10,9 @@ namespace ALDIDigitalServicesTest\Zed\LeanPublisher\Business;
 use ALDIDigitalServices\Zed\LeanPublisher\Business\Exception\EventHandlerNotFoundException;
 use ALDIDigitalServices\Zed\LeanPublisher\Communication\Plugin\LeanPublisherEventHandlerPluginInterface;
 use ALDIDigitalServices\Zed\LeanPublisher\LeanPublisherDependencyProvider;
+use ALDIDigitalServicesTest\Zed\LeanPublisher\LeanPublisherBusinessTester;
 use Codeception\TestCase\Test;
 use Orm\Zed\ProductOffer\Persistence\Map\SpyProductOfferTableMap;
-use ALDIDigitalServicesTest\Zed\LeanPublisher\LeanPublisherBusinessTester;
 use Spryker\Zed\ProductOffer\Dependency\ProductOfferEvents;
 
 /**
