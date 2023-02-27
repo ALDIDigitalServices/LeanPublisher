@@ -2,6 +2,16 @@
     "name": "aldidigitalservices/lean-publisher",
     "description": "Lean publishing module for Spryker",
     "type": "library",
+    "authors": [
+        {
+            "name": "Christian Ankert",
+            "email": "christian.ankert@aldi-sued.com"
+        },
+        {
+            "name": "David Greiner",
+            "email": "hallo@davidgreiner.de"
+        }
+    ],
     "license": "MIT",
     "require": {
         "spryker/kernel": "^3.65",
