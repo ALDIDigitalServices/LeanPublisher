@@ -1,0 +1,14 @@
+name: CI
+
+on: [push]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: tests
+        uses: joelwmale/codeception-action@master
