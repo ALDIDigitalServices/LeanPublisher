@@ -14,6 +14,7 @@ use ALDIDigitalServices\Zed\LeanPublisher\Business\Message\MessageTransferManage
 use ALDIDigitalServices\Zed\LeanPublisher\Business\Publish\Publisher;
 use ALDIDigitalServices\Zed\LeanPublisher\Business\Publish\PublisherInterface;
 use ALDIDigitalServices\Zed\LeanPublisher\Business\Resolver\EventHandlerPluginResolver;
+use ALDIDigitalServices\Zed\LeanPublisher\Business\Resynchronization\Resynchronization;
 use ALDIDigitalServices\Zed\LeanPublisher\Business\Synchronization\Synchronization;
 use ALDIDigitalServices\Zed\LeanPublisher\LeanPublisherDependencyProvider;
 use Pyz\Zed\Event\Business\EventFacadeInterface;
@@ -23,6 +24,7 @@ use Spryker\Zed\Kernel\Business\AbstractBusinessFactory;
 /**
  * @method \ALDIDigitalServices\Zed\LeanPublisher\Persistence\LeanPublisherEntityManagerInterface getEntityManager()
  * @method \ALDIDigitalServices\Zed\LeanPublisher\LeanPublisherConfig getConfig()
+ * @method \ALDIDigitalServices\Zed\LeanPublisher\Persistence\LeanPublisherRepositoryInterface getRepository()
  */
 class LeanPublisherBusinessFactory extends AbstractBusinessFactory
 {
@@ -40,9 +42,22 @@ class LeanPublisherBusinessFactory extends AbstractBusinessFactory
     }
 
     /**
+     * @return \ALDIDigitalServices\Zed\LeanPublisher\Business\Resynchronization\Resynchronization
+     */
+    public function createResynchronization(): Resynchronization
+    {
+        return new Resynchronization(
+            $this->createSynchronization(),
+            $this->createEventHandlerPluginResolver(),
+            $this->getRepository(),
+            $this->getConfig()
+        );
+    }
+
+    /**
      * @return \ALDIDigitalServices\Zed\LeanPublisher\Business\Resolver\EventHandlerPluginResolver
      */
-    protected function createEventHandlerPluginResolver(): EventHandlerPluginResolver
+    public function createEventHandlerPluginResolver(): EventHandlerPluginResolver
     {
         return new EventHandlerPluginResolver(
             $this->getEventHandlerPlugins()
