@@ -65,7 +65,7 @@ class LeanPublisherEventConsumer implements LeanPublisherEventConsumerInterface
      * @throws \Exception
      * @return array
      */
-    public function processLEanPublisherMessages(array $queueReceiveMessageTransfers): array
+    public function processLeanPublisherMessages(array $queueReceiveMessageTransfers): array
     {
         $queueMessagesGroupedByQueueName = $this->messageTransferManager->groupQueueMessageTransfersByQueueName($queueReceiveMessageTransfers);
 

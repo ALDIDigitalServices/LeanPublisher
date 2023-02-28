@@ -26,7 +26,7 @@ class LeanPublisherFacade extends AbstractFacade implements LeanPublisherFacadeI
      */
     public function processLeanPublisherMessages(array $queueReceiveMessageTransfers): array
     {
-        return $this->getFactory()->createLeanPublisherEventConsumer()->processLEanPublisherMessages($queueReceiveMessageTransfers);
+        return $this->getFactory()->createLeanPublisherEventConsumer()->processLeanPublisherMessages($queueReceiveMessageTransfers);
     }
 
     /**

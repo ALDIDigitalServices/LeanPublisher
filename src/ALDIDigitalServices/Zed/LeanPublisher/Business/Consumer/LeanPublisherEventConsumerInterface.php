@@ -21,5 +21,5 @@ interface LeanPublisherEventConsumerInterface
      *
      * @return array
      */
-    public function processLEanPublisherMessages(array $queueReceiveMessageTransfers): array;
+    public function processLeanPublisherMessages(array $queueReceiveMessageTransfers): array;
 }
