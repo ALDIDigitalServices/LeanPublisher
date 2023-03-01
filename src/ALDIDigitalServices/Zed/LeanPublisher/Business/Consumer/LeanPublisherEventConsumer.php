@@ -83,7 +83,7 @@ class LeanPublisherEventConsumer implements LeanPublisherEventConsumerInterface
             $leanPublisherQueueMessageCollection = $this->messageTransferManager
                 ->filterQueueMessageTransfers(
                     $leanPublisherQueueMessageCollection,
-                    $eventHandler->getPropertyFilterMapping(),
+                    $eventHandler->getSubscribedEventCollection(),
                 );
 
             $data = [];

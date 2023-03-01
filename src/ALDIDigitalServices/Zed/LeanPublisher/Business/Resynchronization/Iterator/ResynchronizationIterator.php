@@ -7,9 +7,9 @@
 
 namespace ALDIDigitalServices\Zed\LeanPublisher\Business\Resynchronization\Iterator;
 
-use Iterator;
 use ALDIDigitalServices\Zed\LeanPublisher\Communication\Plugin\LeanPublisherEventHandlerPluginInterface;
 use ALDIDigitalServices\Zed\LeanPublisher\Persistence\LeanPublisherRepositoryInterface;
+use Iterator;
 
 class ResynchronizationIterator implements Iterator
 {
