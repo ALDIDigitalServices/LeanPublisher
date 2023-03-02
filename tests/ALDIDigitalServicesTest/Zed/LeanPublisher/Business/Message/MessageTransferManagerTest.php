@@ -59,7 +59,7 @@ class MessageTransferManagerTest extends Test
         );
 
         $leanPublisherQueueMessageCollection = (new LeanPublisherQueueMessageCollectionTransfer())
-            ->setValidMessages(new ArrayObject($eventQueueReceiveMessages));
+            ->setValidatedMessages(new ArrayObject($eventQueueReceiveMessages));
 
         // act
         $filteredQueueMessageTransfers = $this->tester->getMessageTransferManager()
@@ -70,7 +70,7 @@ class MessageTransferManagerTest extends Test
 
 
         // assert
-        $this->assertCount($expectedCount, $filteredQueueMessageTransfers->getValidMessages());
+        $this->assertCount($expectedCount, $filteredQueueMessageTransfers->getValidatedMessages());
     }
 
     /**

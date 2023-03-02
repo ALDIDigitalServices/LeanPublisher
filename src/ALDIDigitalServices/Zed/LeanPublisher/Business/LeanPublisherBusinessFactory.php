@@ -18,6 +18,7 @@ use ALDIDigitalServices\Zed\LeanPublisher\Business\Resynchronization\Resynchroni
 use ALDIDigitalServices\Zed\LeanPublisher\Business\Synchronization\Synchronization;
 use ALDIDigitalServices\Zed\LeanPublisher\LeanPublisherDependencyProvider;
 use Pyz\Zed\Event\Business\EventFacadeInterface;
+use Pyz\Zed\Store\Business\StoreFacadeInterface;
 use Spryker\Service\UtilEncoding\UtilEncodingServiceInterface;
 use Spryker\Zed\Kernel\Business\AbstractBusinessFactory;
 
@@ -38,6 +39,7 @@ class LeanPublisherBusinessFactory extends AbstractBusinessFactory
             $this->createEventHandlerPluginResolver(),
             $this->createLeanPublisher(),
             $this->createSynchronization(),
+            $this->getStoreFacade(),
         );
     }
 
@@ -125,5 +127,13 @@ class LeanPublisherBusinessFactory extends AbstractBusinessFactory
     protected function getUtilEncodingService(): UtilEncodingServiceInterface
     {
         return $this->getProvidedDependency(LeanPublisherDependencyProvider::SERVICE_UTIL_ENCODING);
+    }
+
+    /**
+     * @return \Pyz\Zed\Store\Business\StoreFacadeInterface
+     */
+    protected function getStoreFacade(): StoreFacadeInterface
+    {
+        return $this->getProvidedDependency(LeanPublisherDependencyProvider::FACADE_STORE);
     }
 }

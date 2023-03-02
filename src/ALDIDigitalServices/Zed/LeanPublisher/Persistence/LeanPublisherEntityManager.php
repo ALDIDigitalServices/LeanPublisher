@@ -8,6 +8,9 @@
 namespace ALDIDigitalServices\Zed\LeanPublisher\Persistence;
 
 use Generated\Shared\Transfer\LeanPublishAndSynchronizationRequestTransfer;
+use Propel\Runtime\ActiveQuery\Criteria;
+use Propel\Runtime\ActiveQuery\Criterion\AbstractCriterion;
+use Propel\Runtime\ActiveQuery\ModelCriteria;
 use Pyz\Zed\Kernel\Persistence\EntityManager\BatchEntityManagerTrait;
 use Spryker\Zed\Kernel\Persistence\AbstractEntityManager;
 
@@ -17,6 +20,9 @@ use Spryker\Zed\Kernel\Persistence\AbstractEntityManager;
 class LeanPublisherEntityManager extends AbstractEntityManager implements LeanPublisherEntityManagerInterface
 {
     use BatchEntityManagerTrait;
+
+    protected const COL_ID_ORIGIN = 'id_origin';
+    protected const COL_REFERENCE = 'reference';
 
     /**
      * @param \Generated\Shared\Transfer\LeanPublishAndSynchronizationRequestTransfer $leanPublishAndSynchronizationRequestTransfer
@@ -70,14 +76,39 @@ class LeanPublisherEntityManager extends AbstractEntityManager implements LeanPu
      */
     public function deletePublishData(LeanPublishAndSynchronizationRequestTransfer $leanPublishAndSynchronizationRequestTransfer): void
     {
-        $references = array_keys($leanPublishAndSynchronizationRequestTransfer->getPublishDataDelete());
+        $deleteDataCollection = $leanPublishAndSynchronizationRequestTransfer->getPublishDataDelete();
 
-        if (empty($references)) {
+        if (empty($deleteDataCollection)) {
             return;
         }
-        $result = $this->getFactory()->createQueryInstance($leanPublishAndSynchronizationRequestTransfer->getQueryClass())
-            ->filterByReference_In($references)
-            ->find();
+
+        $references = [];
+        $originIds = [];
+        foreach ($deleteDataCollection as $deleteItem) {
+            $originIds[] = $deleteItem[static::COL_ID_ORIGIN] ?? null;
+            $references[] = $deleteItem[static::COL_REFERENCE] ?? null;
+        }
+
+        $originIds = array_filter($originIds);
+        $references = array_filter($references);
+
+        if (empty($references) && empty($originIds)) {
+            return;
+        }
+
+        $query = $this->getFactory()->createQueryInstance($leanPublishAndSynchronizationRequestTransfer->getQueryClass());
+
+        if ($originIds) {
+            $idOriginCriterion = $this->createCriterion($query, static::COL_ID_ORIGIN, $this->mapToIntItems($originIds));
+            $query->addOr($idOriginCriterion);
+        }
+
+        if ($references) {
+            $referencesCriterion = $this->createCriterion($query, static::COL_REFERENCE, $references);
+            $query->addOr($referencesCriterion);
+        }
+
+        $result = $query->find();
 
         if ($result->count()) {
             $entitiesToDelete = $result;
@@ -85,6 +116,33 @@ class LeanPublisherEntityManager extends AbstractEntityManager implements LeanPu
         }
 
         $leanPublishAndSynchronizationRequestTransfer->setSyncDataDelete($result->getArrayCopy());
+    }
+
+    /**
+     * @param \Propel\Runtime\ActiveQuery\ModelCriteria $query
+     * @param string $column
+     * @param mixed $value
+     * @param string $comparison
+     *
+     * @return \Propel\Runtime\ActiveQuery\Criterion\AbstractCriterion
+     */
+    protected function createCriterion(ModelCriteria $query, string $column, mixed $value, string $comparison = Criteria::IN): AbstractCriterion
+    {
+        return $query->getNewCriterion(
+            $column,
+            $value,
+            $comparison
+        );
+    }
+
+    /**
+     * @param array $values
+     *
+     * @return int[]
+     */
+    protected function mapToIntItems(array $values): array
+    {
+        return array_map(static fn($value): int => (int)$value, $values);
     }
 
     /**

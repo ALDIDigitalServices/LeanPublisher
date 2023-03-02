@@ -15,7 +15,9 @@ use ALDIDigitalServices\Zed\LeanPublisher\Communication\Plugin\LeanPublisherEven
 use ALDIDigitalServices\Zed\LeanPublisher\Communication\Plugin\LeanPublisherSearchPublishPluginInterface;
 use ALDIDigitalServices\Zed\LeanPublisher\Communication\Plugin\LeanPublisherStoragePublishPluginInterface;
 use Generated\Shared\Transfer\LeanPublishAndSynchronizationRequestTransfer;
+use Generated\Shared\Transfer\LeanPublisherDataTransfer;
 use Generated\Shared\Transfer\LeanPublisherQueueMessageCollectionTransfer;
+use Pyz\Zed\Store\Business\StoreFacadeInterface;
 
 class LeanPublisherEventConsumer implements LeanPublisherEventConsumerInterface
 {
@@ -40,21 +42,29 @@ class LeanPublisherEventConsumer implements LeanPublisherEventConsumerInterface
     protected Synchronization $synchronization;
 
     /**
+     * @var \Pyz\Zed\Store\Business\StoreFacadeInterface
+     */
+    protected StoreFacadeInterface $storeFacade;
+
+    /**
      * @param \ALDIDigitalServices\Zed\LeanPublisher\Business\Message\MessageTransferManagerInterface $messageTransferManager
      * @param \ALDIDigitalServices\Zed\LeanPublisher\Business\Resolver\EventHandlerPluginResolver $eventHandlerPluginResolver
      * @param \ALDIDigitalServices\Zed\LeanPublisher\Business\Publish\PublisherInterface $leanPublisher
      * @param \ALDIDigitalServices\Zed\LeanPublisher\Business\Synchronization\Synchronization $synchronization
+     * @param \Pyz\Zed\Store\Business\StoreFacadeInterface $storeFacade
      */
     public function __construct(
         MessageTransferManagerInterface $messageTransferManager,
         EventHandlerPluginResolver $eventHandlerPluginResolver,
         PublisherInterface $leanPublisher,
-        Synchronization $synchronization
+        Synchronization $synchronization,
+        StoreFacadeInterface $storeFacade
     ) {
         $this->messageTransferManager = $messageTransferManager;
         $this->eventHandlerPluginResolver = $eventHandlerPluginResolver;
         $this->leanPublisher = $leanPublisher;
         $this->synchronization = $synchronization;
+        $this->storeFacade = $storeFacade;
     }
 
     /**
@@ -69,48 +79,126 @@ class LeanPublisherEventConsumer implements LeanPublisherEventConsumerInterface
     {
         $queueMessagesGroupedByQueueName = $this->messageTransferManager->groupQueueMessageTransfersByQueueName($queueReceiveMessageTransfers);
 
-        $leanPublisherQueueMessageCollection = new LeanPublisherQueueMessageCollectionTransfer();
-
         foreach ($queueMessagesGroupedByQueueName as $queueName => $queueMessages) {
             $eventHandler = $this->eventHandlerPluginResolver->getEventHandlerPluginFromQueueName($queueName);
 
-            $leanPublishAndSynchronizationRequestTransfer = (new LeanPublishAndSynchronizationRequestTransfer())
-                ->setQueryClass($eventHandler->getPublishTableQueryClass());
-
             $leanPublisherQueueMessageCollection = $this->messageTransferManager
-                ->validateQueueMessages($queueMessages, $leanPublisherQueueMessageCollection);
-
-            $leanPublisherQueueMessageCollection = $this->messageTransferManager
-                ->filterQueueMessageTransfers(
-                    $leanPublisherQueueMessageCollection,
-                    $eventHandler->getSubscribedEventCollection(),
+                ->validateAndFilterQueueMessages(
+                    $queueMessages,
+                    $eventHandler->getSubscribedEventCollection()
                 );
 
-            $data = [];
-            if ($leanPublisherQueueMessageCollection->getValidMessages()->count()) {
-                $groupedValidMessageTransfers = $this->messageTransferManager
-                    ->groupEventTransfersByTable($leanPublisherQueueMessageCollection->getValidMessages());
+            $leanPublishAndSynchronizationRequest = (new LeanPublishAndSynchronizationRequestTransfer())->setQueryClass($eventHandler->getPublishTableQueryClass());
 
-                $data = $eventHandler->loadData($groupedValidMessageTransfers);
-            }
+            $leanPublisherQueueMessageCollection = $this->messageTransferManager->setWriteAndDeleteMessages($leanPublisherQueueMessageCollection);
+            $leanPublishAndSynchronizationRequest = $this->setWriteData($leanPublisherQueueMessageCollection, $leanPublishAndSynchronizationRequest, $eventHandler);
+            $leanPublishAndSynchronizationRequest = $this->setDeleteData($leanPublisherQueueMessageCollection, $leanPublishAndSynchronizationRequest, $eventHandler);
 
-
-            if (empty($data)) {
-                $this->messageTransferManager->markMessagesAcknowledged($leanPublisherQueueMessageCollection->getValidMessages());
-                $this->messageTransferManager->markMessagesAcknowledged($leanPublisherQueueMessageCollection->getInvalidMessages());
+            if ($this->hasNoPublishData($leanPublishAndSynchronizationRequest)) {
                 continue;
             }
 
-            $leanPublishAndSynchronizationRequestTransfer = $this->mapWriteAndDeleteData($eventHandler, $data, $leanPublishAndSynchronizationRequestTransfer);
-            $leanPublishAndSynchronizationRequestTransfer = $this->leanPublisher->publishData($leanPublishAndSynchronizationRequestTransfer);
+            $leanPublishAndSynchronizationRequest = $this->leanPublisher->publishData($leanPublishAndSynchronizationRequest);
 
-            $this->synchronization->synchronizeData($leanPublishAndSynchronizationRequestTransfer, $eventHandler);
+            $this->synchronization->synchronizeData($leanPublishAndSynchronizationRequest, $eventHandler);
 
-            $this->messageTransferManager->markMessagesAcknowledged($leanPublisherQueueMessageCollection->getValidMessages());
+            $this->markMessagesAcknowledged($leanPublisherQueueMessageCollection);
         }
 
-        return $leanPublisherQueueMessageCollection->getValidMessages()->getArrayCopy() +
+        return $leanPublisherQueueMessageCollection->getValidatedMessages()->getArrayCopy() +
             $leanPublisherQueueMessageCollection->getInvalidMessages()->getArrayCopy();
+    }
+
+    /**
+     * @param \Generated\Shared\Transfer\LeanPublisherQueueMessageCollectionTransfer $leanPublisherQueueMessageCollection
+     *
+     * @return void
+     */
+    protected function markMessagesAcknowledged(LeanPublisherQueueMessageCollectionTransfer $leanPublisherQueueMessageCollection): void
+    {
+        $this->messageTransferManager->markMessagesAcknowledged($leanPublisherQueueMessageCollection);
+    }
+
+    /**
+     * @param \Generated\Shared\Transfer\LeanPublishAndSynchronizationRequestTransfer $leanPublishAndSynchronizationRequest
+     *
+     * @return bool
+     */
+    protected function hasNoPublishData(LeanPublishAndSynchronizationRequestTransfer $leanPublishAndSynchronizationRequest): bool
+    {
+        return empty($leanPublishAndSynchronizationRequest->getPublishDataWrite()) &&
+            empty($leanPublishAndSynchronizationRequest->getPublishDataDelete());
+    }
+
+    /**
+     * @param \Generated\Shared\Transfer\LeanPublisherQueueMessageCollectionTransfer $leanPublisherQueueMessageCollection
+     * @param \Generated\Shared\Transfer\LeanPublishAndSynchronizationRequestTransfer $leanPublishAndSynchronizationRequest
+     * @param \ALDIDigitalServices\Zed\LeanPublisher\Communication\Plugin\LeanPublisherEventHandlerPluginInterface $eventHandler
+     *
+     * @return \Generated\Shared\Transfer\LeanPublishAndSynchronizationRequestTransfer
+     */
+    protected function setWriteData(
+        LeanPublisherQueueMessageCollectionTransfer $leanPublisherQueueMessageCollection,
+        LeanPublishAndSynchronizationRequestTransfer $leanPublishAndSynchronizationRequest,
+        LeanPublisherEventHandlerPluginInterface $eventHandler
+    ): LeanPublishAndSynchronizationRequestTransfer {
+        $writeData = $this->loadWriteData($leanPublisherQueueMessageCollection, $eventHandler);
+
+        if ($writeData) {
+            $leanPublishAndSynchronizationRequest = $this->mapWriteData($eventHandler, $writeData, $leanPublishAndSynchronizationRequest);
+        }
+
+        return $leanPublishAndSynchronizationRequest;
+    }
+
+    /**
+     * @param \Generated\Shared\Transfer\LeanPublisherQueueMessageCollectionTransfer $leanPublisherQueueMessageCollection
+     * @param \Generated\Shared\Transfer\LeanPublishAndSynchronizationRequestTransfer $leanPublishAndSynchronizationRequest
+     * @param \ALDIDigitalServices\Zed\LeanPublisher\Communication\Plugin\LeanPublisherEventHandlerPluginInterface $eventHandler
+     *
+     * @return \Generated\Shared\Transfer\LeanPublishAndSynchronizationRequestTransfer
+     */
+    protected function setDeleteData(
+        LeanPublisherQueueMessageCollectionTransfer $leanPublisherQueueMessageCollection,
+        LeanPublishAndSynchronizationRequestTransfer $leanPublishAndSynchronizationRequest,
+        LeanPublisherEventHandlerPluginInterface $eventHandler
+    ): LeanPublishAndSynchronizationRequestTransfer {
+        $deleteMessages = $leanPublisherQueueMessageCollection->getDeleteMessages();
+
+        if (!$deleteMessages->count()) {
+            return $leanPublishAndSynchronizationRequest;
+        }
+
+        $storeName = $this->storeFacade->getCurrentStore()->getName();
+
+        foreach ($deleteMessages as $deleteMessage) {
+            $deleteMessage = $this->prepareDeleteMessage($deleteMessage, $storeName);
+            $leanPublishAndSynchronizationRequest->addPublishDeleteData($deleteMessage);
+        }
+
+        if ($eventHandler instanceof LeanPublisherSearchPublishPluginInterface) {
+            $leanPublishAndSynchronizationRequest->setElasticSearchIndex($eventHandler->getElasticSearchIndex());
+        }
+
+        return $leanPublishAndSynchronizationRequest;
+    }
+
+    /**
+     * @param $deleteMessage
+     * @param string $storeName
+     *
+     * @return array
+     */
+    protected function prepareDeleteMessage($deleteMessage, string $storeName): array
+    {
+        $originId = $this->messageTransferManager
+            ->getEventQueueSentMessageBodyTransfer($deleteMessage)
+            ->getTransferData()['id'];
+
+        return (new LeanPublisherDataTransfer())
+            ->setStore($storeName)
+            ->setIdOrigin($originId)
+            ->modifiedToArray();
     }
 
     /**
@@ -120,7 +208,7 @@ class LeanPublisherEventConsumer implements LeanPublisherEventConsumerInterface
      *
      * @return \Generated\Shared\Transfer\LeanPublishAndSynchronizationRequestTransfer
      */
-    protected function mapWriteAndDeleteData(
+    protected function mapWriteData(
         LeanPublisherEventHandlerPluginInterface $eventHandler,
         array $loadedData,
         LeanPublishAndSynchronizationRequestTransfer $leanPublishAndSynchronizationRequestTransfer
@@ -135,5 +223,24 @@ class LeanPublisherEventConsumer implements LeanPublisherEventConsumerInterface
         }
 
         return $leanPublishAndSynchronizationRequestTransfer;
+    }
+
+    /**
+     * @param \Generated\Shared\Transfer\LeanPublisherQueueMessageCollectionTransfer $leanPublisherQueueMessageCollection
+     * @param \ALDIDigitalServices\Zed\LeanPublisher\Communication\Plugin\LeanPublisherEventHandlerPluginInterface $eventHandler
+     *
+     * @return array
+     */
+    private function loadWriteData(
+        LeanPublisherQueueMessageCollectionTransfer $leanPublisherQueueMessageCollection,
+        LeanPublisherEventHandlerPluginInterface $eventHandler
+    ): array {
+        $writeData = [];
+        if ($leanPublisherQueueMessageCollection->getWriteMessages()->count()) {
+            $writeMessages = $this->messageTransferManager->groupEventTransfersByTable($leanPublisherQueueMessageCollection->getWriteMessages());
+            $writeData = $eventHandler->loadData($writeMessages);
+        }
+
+        return $writeData;
     }
 }

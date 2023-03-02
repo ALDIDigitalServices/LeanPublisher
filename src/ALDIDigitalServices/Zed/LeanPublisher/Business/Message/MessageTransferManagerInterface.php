@@ -8,31 +8,21 @@
 namespace ALDIDigitalServices\Zed\LeanPublisher\Business\Message;
 
 use ArrayObject;
+use Generated\Shared\Transfer\EventQueueSendMessageBodyTransfer;
 use Generated\Shared\Transfer\LeanPublisherEventCollectionTransfer;
 use Generated\Shared\Transfer\LeanPublisherQueueMessageCollectionTransfer;
+use Generated\Shared\Transfer\QueueReceiveMessageTransfer;
 
 interface MessageTransferManagerInterface
 {
     /**
-     * @param array $queueReceiveMessageTransfers
-     * @param \Generated\Shared\Transfer\LeanPublisherQueueMessageCollectionTransfer $leanPublisherQueueMessageCollection
-     *
-     * @return \Generated\Shared\Transfer\LeanPublisherQueueMessageCollectionTransfer
-     */
-    public function validateQueueMessages(
-        array $queueReceiveMessageTransfers,
-        LeanPublisherQueueMessageCollectionTransfer $leanPublisherQueueMessageCollection
-    ): LeanPublisherQueueMessageCollectionTransfer;
-
-    /**
-     * @param \Generated\Shared\Transfer\LeanPublisherQueueMessageCollectionTransfer $leanPublisherQueueMessageCollection
-     *
+     * @param array $queueMessageTransfers
      * @param \Generated\Shared\Transfer\LeanPublisherEventCollectionTransfer $leanPublisherEventCollectionTransfer
      *
      * @return \Generated\Shared\Transfer\LeanPublisherQueueMessageCollectionTransfer
      */
-    public function filterQueueMessageTransfers(
-        LeanPublisherQueueMessageCollectionTransfer $leanPublisherQueueMessageCollection,
+    public function validateAndFilterQueueMessages(
+        array $queueMessageTransfers,
         LeanPublisherEventCollectionTransfer $leanPublisherEventCollectionTransfer
     ): LeanPublisherQueueMessageCollectionTransfer;
 
@@ -51,9 +41,16 @@ interface MessageTransferManagerInterface
     public function groupEventTransfersByTable(ArrayObject $eventEntityTransfers): array;
 
     /**
-     * @param \ArrayObject $queueMessages
+     * @param \Generated\Shared\Transfer\LeanPublisherQueueMessageCollectionTransfer $queueMessageCollectionTransfer
      *
      * @return void
      */
-    public function markMessagesAcknowledged(ArrayObject $queueMessages): void;
+    public function markMessagesAcknowledged(LeanPublisherQueueMessageCollectionTransfer $queueMessageCollectionTransfer): void;
+
+    /**
+     * @param \Generated\Shared\Transfer\QueueReceiveMessageTransfer $queueReceiveMessageTransfer
+     *
+     * @return \Generated\Shared\Transfer\EventQueueSendMessageBodyTransfer
+     */
+    public function getEventQueueSentMessageBodyTransfer(QueueReceiveMessageTransfer $queueReceiveMessageTransfer): EventQueueSendMessageBodyTransfer;
 }

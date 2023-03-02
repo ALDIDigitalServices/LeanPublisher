@@ -19,11 +19,14 @@
         <property name="keyStorage" type="string"/>
         <property name="store" type="string"/>
         <property name="reference" type="string"/>
+        <property name="idOrigin" type="int" />
     </transfer>
 
     <transfer name="LeanPublisherQueueMessageCollection">
-        <property name="validMessages" type="QueueReceiveMessage[]" singular="validMessage"/>
+        <property name="validatedMessages" type="QueueReceiveMessage[]" singular="validatedMessage"/>
         <property name="invalidMessages" type="QueueReceiveMessage[]" singular="invalidMessage"/>
+        <property name="writeMessages" type="QueueReceiveMessage[]" singular="writeMessage" />
+        <property name="deleteMessages" type="QueueReceiveMessage[]" singular="deleteMessage"/>
     </transfer>
 
     <transfer name="LeanPublisherResynchronizationRequest">
