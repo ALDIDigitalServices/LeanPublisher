@@ -8,6 +8,7 @@
 namespace ALDIDigitalServices\Zed\LeanPublisher\Business\Message;
 
 use ArrayObject;
+use Generated\Shared\Transfer\LeanPublisherEventCollectionTransfer;
 use Generated\Shared\Transfer\LeanPublisherQueueMessageCollectionTransfer;
 
 interface MessageTransferManagerInterface
@@ -26,13 +27,13 @@ interface MessageTransferManagerInterface
     /**
      * @param \Generated\Shared\Transfer\LeanPublisherQueueMessageCollectionTransfer $leanPublisherQueueMessageCollection
      *
-     * @param array $eventEntityFilterCriteria
+     * @param \Generated\Shared\Transfer\LeanPublisherEventCollectionTransfer $leanPublisherEventCollectionTransfer
      *
      * @return \Generated\Shared\Transfer\LeanPublisherQueueMessageCollectionTransfer
      */
     public function filterQueueMessageTransfers(
         LeanPublisherQueueMessageCollectionTransfer $leanPublisherQueueMessageCollection,
-        array $eventEntityFilterCriteria
+        LeanPublisherEventCollectionTransfer $leanPublisherEventCollectionTransfer
     ): LeanPublisherQueueMessageCollectionTransfer;
 
     /**

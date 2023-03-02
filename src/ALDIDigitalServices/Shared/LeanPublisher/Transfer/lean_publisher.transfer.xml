@@ -30,4 +30,14 @@
         <property name="resources" type="string[]" singular="resource" />
         <property name="ids" type="int[]" singular="id" />
     </transfer>
+
+    <transfer name="LeanPublisherEventCollection">
+        <property name="events" type="LeanPublisherEvent[]" singular="event" />
+    </transfer>
+
+    <transfer name="LeanPublisherEvent">
+        <property name="eventName" type="string" />
+        <property name="filterProperties" type="string[]" singular="filterProperty" />
+    </transfer>
+
 </transfers>

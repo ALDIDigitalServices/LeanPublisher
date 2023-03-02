@@ -8,6 +8,7 @@
 namespace ALDIDigitalServices\Zed\LeanPublisher\Communication\Plugin\Event\Subscriber;
 
 use ALDIDigitalServices\Zed\LeanPublisher\Communication\Plugin\Event\Listeners\LeanPublisherEventListener;
+use Generated\Shared\Transfer\LeanPublisherEventCollectionTransfer;
 use Spryker\Zed\Event\Dependency\EventCollectionInterface;
 use Spryker\Zed\Event\Dependency\Plugin\EventBulkHandlerInterface;
 use Spryker\Zed\Event\Dependency\Plugin\EventSubscriberInterface;
@@ -29,11 +30,11 @@ class LeanPublisherEventSubscriber extends AbstractPlugin implements EventSubscr
      */
     public function getSubscribedEvents(EventCollectionInterface $eventCollection): EventCollectionInterface
     {
-        foreach ($this->getFactory()->getLeanPublisherEventHandlerPlugins() as $eventRegistrationPlugin) {
+        foreach ($this->getFactory()->getLeanPublisherEventHandlerPlugins() as $eventHandlerPlugin) {
             $eventCollection = $this->registerEvents(
                 $eventCollection,
-                $eventRegistrationPlugin->getSubscribedEvents(),
-                $eventRegistrationPlugin->getQueueName()
+                $eventHandlerPlugin->getSubscribedEventCollection(),
+                $eventHandlerPlugin->getQueueName()
             );
         }
 
@@ -42,16 +43,16 @@ class LeanPublisherEventSubscriber extends AbstractPlugin implements EventSubscr
 
     /**
      * @param \Spryker\Zed\Event\Dependency\EventCollectionInterface $eventCollection
-     * @param array $eventMapping
+     * @param \Generated\Shared\Transfer\LeanPublisherEventCollectionTransfer $eventCollectionTransfer
      * @param string $eventQueueName
      *
      * @return \Spryker\Zed\Event\Dependency\EventCollectionInterface
      */
-    protected function registerEvents(EventCollectionInterface $eventCollection, array $eventMapping, string $eventQueueName): EventCollectionInterface
+    protected function registerEvents(EventCollectionInterface $eventCollection, LeanPublisherEventCollectionTransfer $eventCollectionTransfer, string $eventQueueName): EventCollectionInterface
     {
-        foreach ($eventMapping as $eventName) {
+        foreach ($eventCollectionTransfer->getEvents() as $eventTransfer) {
             $this->addListener(
-                $eventName,
+                $eventTransfer->getEventName(),
                 $eventQueueName,
                 $eventCollection
             );

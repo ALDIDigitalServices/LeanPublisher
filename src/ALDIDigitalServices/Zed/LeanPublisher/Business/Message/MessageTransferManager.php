@@ -9,6 +9,7 @@ namespace ALDIDigitalServices\Zed\LeanPublisher\Business\Message;
 
 use ArrayObject;
 use Generated\Shared\Transfer\EventQueueSendMessageBodyTransfer;
+use Generated\Shared\Transfer\LeanPublisherEventCollectionTransfer;
 use Generated\Shared\Transfer\LeanPublisherQueueMessageCollectionTransfer;
 use Generated\Shared\Transfer\QueueReceiveMessageTransfer;
 use Pyz\Zed\Event\Business\EventFacadeInterface;
@@ -72,15 +73,15 @@ class MessageTransferManager implements MessageTransferManagerInterface
     /**
      * @param \Generated\Shared\Transfer\LeanPublisherQueueMessageCollectionTransfer $leanPublisherQueueMessageCollection
      *
-     * @param array $eventEntityFilterCriteria
+     * @param \Generated\Shared\Transfer\LeanPublisherEventCollectionTransfer $leanPublisherEventCollectionTransfer
      *
      * @return \Generated\Shared\Transfer\LeanPublisherQueueMessageCollectionTransfer
      */
     public function filterQueueMessageTransfers(
         LeanPublisherQueueMessageCollectionTransfer $leanPublisherQueueMessageCollection,
-        array $eventEntityFilterCriteria
+        LeanPublisherEventCollectionTransfer $leanPublisherEventCollectionTransfer
     ): LeanPublisherQueueMessageCollectionTransfer {
-        $eventEntityFilterCriteria = $this->formatFilterCriteria($eventEntityFilterCriteria);
+        $eventEntityFilterCriteria = $this->formatFilterCriteria($leanPublisherEventCollectionTransfer);
 
         $validMessages = $leanPublisherQueueMessageCollection->getValidMessages();
         $messagesToKeep = new ArrayObject();
@@ -151,19 +152,15 @@ class MessageTransferManager implements MessageTransferManagerInterface
     }
 
     /**
-     * @param array $filterCriteria
+     * @param \Generated\Shared\Transfer\LeanPublisherEventCollectionTransfer $leanPublisherEventCollectionTransfer
      *
      * @return array
      */
-    protected function formatFilterCriteria(array $filterCriteria): array
+    protected function formatFilterCriteria(LeanPublisherEventCollectionTransfer $leanPublisherEventCollectionTransfer): array
     {
         $formattedFilterCriteria = [];
-        foreach ($filterCriteria as $key => $value) {
-            if (!is_array($value)) {
-                $formattedFilterCriteria[$value] = [];
-                continue;
-            }
-            $formattedFilterCriteria[$key] = $value;
+        foreach ($leanPublisherEventCollectionTransfer->getEvents() as $event) {
+            $formattedFilterCriteria[$event->getEventName()] = $event->getFilterProperties();
         }
 
         return $formattedFilterCriteria;

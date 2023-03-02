@@ -7,16 +7,16 @@
 
 namespace ALDIDigitalServices\Zed\LeanPublisher\Business\Resynchronization;
 
-use Generated\Shared\Transfer\LeanPublishAndSynchronizationRequestTransfer;
-use Generated\Shared\Transfer\LeanPublisherResynchronizationRequestTransfer;
-use Iterator;
-use ALDIDigitalServices\Zed\LeanPublisher\LeanPublisherConfig;
 use ALDIDigitalServices\Zed\LeanPublisher\Business\Resolver\EventHandlerPluginResolver;
 use ALDIDigitalServices\Zed\LeanPublisher\Business\Resynchronization\Iterator\ResynchronizationIterator;
 use ALDIDigitalServices\Zed\LeanPublisher\Business\Synchronization\Synchronization;
 use ALDIDigitalServices\Zed\LeanPublisher\Communication\Plugin\LeanPublisherEventHandlerPluginInterface;
 use ALDIDigitalServices\Zed\LeanPublisher\Communication\Plugin\LeanPublisherSearchPublishPluginInterface;
+use ALDIDigitalServices\Zed\LeanPublisher\LeanPublisherConfig;
 use ALDIDigitalServices\Zed\LeanPublisher\Persistence\LeanPublisherRepositoryInterface;
+use Generated\Shared\Transfer\LeanPublishAndSynchronizationRequestTransfer;
+use Generated\Shared\Transfer\LeanPublisherResynchronizationRequestTransfer;
+use Iterator;
 use Spryker\Zed\Kernel\Persistence\EntityManager\InstancePoolingTrait;
 
 class Resynchronization

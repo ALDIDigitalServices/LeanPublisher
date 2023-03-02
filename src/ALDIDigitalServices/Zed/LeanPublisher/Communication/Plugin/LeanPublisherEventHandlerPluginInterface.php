@@ -7,40 +7,23 @@
 
 namespace ALDIDigitalServices\Zed\LeanPublisher\Communication\Plugin;
 
+use Generated\Shared\Transfer\LeanPublisherEventCollectionTransfer;
+
 interface LeanPublisherEventHandlerPluginInterface
 {
     /**
      * Specification:
      *  - gets subscribed events for this event handler
-     *
-     * @api
-     *
-     * @return array
-     */
-    public function getSubscribedEvents(): array;
-
-    /**
-     * Specification:
-     *  - gets PropertyFilterMapping to filter events to be handled or not
-     *  - with this mapping, it is possible to define if an entity should be published and synchronized or not
-     *      when certain entity property has changed
-     *  - the returned array is expected to be structured into events and properties which need to have been changed
-     *  - For example, this mapping would lead to process any messages when <MyEntity> was created
-     *    but only when COL_IS_ACTIVE on this entity was updated. Updating any other column would not have an impact.
-     *      [
-     *          MyEntityEvents::ENTITY_MY_ENTITY_CREATE,
-     *          MyEntityEvents::ENTITY_MY_ENTITY_UPDATE => [
-     *              MyEntityTableMap::COL_IS_ACTIVE,
-     *          ],
-     *      ]
+     *  - events can contain a list of properties which only should lead to processing of the message
+     *  - this makes it possible to define if an entity should be published and synchronized or not when certain entity property has changed
      *
      * @link https://confluence.aldi-sued.com/display/ACI/ALDI+Publisher
      *
      * @api
      *
-     * @return array
+     * @return \Generated\Shared\Transfer\LeanPublisherEventCollectionTransfer
      */
-    public function getPropertyFilterMapping(): array;
+    public function getSubscribedEventCollection(): LeanPublisherEventCollectionTransfer;
 
     /**
      * Specification:
