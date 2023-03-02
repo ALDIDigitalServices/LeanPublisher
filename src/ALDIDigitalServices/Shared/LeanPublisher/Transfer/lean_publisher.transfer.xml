@@ -6,10 +6,14 @@
     <transfer name="LeanPublishAndSynchronizationRequest">
         <property name="queryClass" type="string"/>
         <property name="elasticSearchIndex" type="string" />
-        <property name="publishDataWrite" type="array" singular="publishWriteData"/>
-        <property name="publishDataDelete" type="array" singular="publishDeleteData"/>
+        <property name="publishDataWrite" type="LeanPublisherDataCollection" singular="publishWriteData"/>
+        <property name="publishDataDelete" type="LeanPublisherDataCollection" singular="publishDeleteData"/>
         <property name="syncDataWrite" type="array" singular="syncWriteData" />
         <property name="syncDataDelete" type="array" singular="syncDeleteData" />
+    </transfer>
+
+    <transfer name="LeanPublisherDataCollection">
+        <property name="data" type="LeanPublisherData[]" singular="datum" />
     </transfer>
 
     <transfer name="LeanPublisherData">

@@ -91,8 +91,8 @@ class LeanPublisherEventConsumer implements LeanPublisherEventConsumerInterface
             $leanPublishAndSynchronizationRequest = (new LeanPublishAndSynchronizationRequestTransfer())->setQueryClass($eventHandler->getPublishTableQueryClass());
 
             $leanPublisherQueueMessageCollection = $this->messageTransferManager->setWriteAndDeleteMessages($leanPublisherQueueMessageCollection);
-            $leanPublishAndSynchronizationRequest = $this->setWriteData($leanPublisherQueueMessageCollection, $leanPublishAndSynchronizationRequest, $eventHandler);
-            $leanPublishAndSynchronizationRequest = $this->setDeleteData($leanPublisherQueueMessageCollection, $leanPublishAndSynchronizationRequest, $eventHandler);
+            $leanPublishAndSynchronizationRequest = $this->addWriteData($leanPublisherQueueMessageCollection, $leanPublishAndSynchronizationRequest, $eventHandler);
+            $leanPublishAndSynchronizationRequest = $this->addDeleteData($leanPublisherQueueMessageCollection, $leanPublishAndSynchronizationRequest, $eventHandler);
 
             if ($this->hasNoPublishData($leanPublishAndSynchronizationRequest)) {
                 continue;
@@ -126,8 +126,10 @@ class LeanPublisherEventConsumer implements LeanPublisherEventConsumerInterface
      */
     protected function hasNoPublishData(LeanPublishAndSynchronizationRequestTransfer $leanPublishAndSynchronizationRequest): bool
     {
-        return empty($leanPublishAndSynchronizationRequest->getPublishDataWrite()) &&
-            empty($leanPublishAndSynchronizationRequest->getPublishDataDelete());
+        return $leanPublishAndSynchronizationRequest->getPublishDataWrite() !== null &&
+            $leanPublishAndSynchronizationRequest->getPublishDataDelete() !== null &&
+            empty($leanPublishAndSynchronizationRequest->getPublishDataWrite()->getData()) &&
+            empty($leanPublishAndSynchronizationRequest->getPublishDataDelete()->getData());
     }
 
     /**
@@ -137,7 +139,7 @@ class LeanPublisherEventConsumer implements LeanPublisherEventConsumerInterface
      *
      * @return \Generated\Shared\Transfer\LeanPublishAndSynchronizationRequestTransfer
      */
-    protected function setWriteData(
+    protected function addWriteData(
         LeanPublisherQueueMessageCollectionTransfer $leanPublisherQueueMessageCollection,
         LeanPublishAndSynchronizationRequestTransfer $leanPublishAndSynchronizationRequest,
         LeanPublisherEventHandlerPluginInterface $eventHandler
@@ -158,7 +160,7 @@ class LeanPublisherEventConsumer implements LeanPublisherEventConsumerInterface
      *
      * @return \Generated\Shared\Transfer\LeanPublishAndSynchronizationRequestTransfer
      */
-    protected function setDeleteData(
+    protected function addDeleteData(
         LeanPublisherQueueMessageCollectionTransfer $leanPublisherQueueMessageCollection,
         LeanPublishAndSynchronizationRequestTransfer $leanPublishAndSynchronizationRequest,
         LeanPublisherEventHandlerPluginInterface $eventHandler
