@@ -19,6 +19,10 @@ use Spryker\Zed\Event\Business\Exception\MessageTypeNotFoundException;
 
 class MessageTransferManager implements MessageTransferManagerInterface
 {
+    protected const EVENT_TYPE_DELETE = 'delete';
+    protected const EVENT_TYPE_CREATE = 'create';
+    protected const EVENT_TYPE_UPDATE = 'update';
+
     /**
      * @var \Pyz\Zed\Event\Business\EventFacadeInterface
      */
@@ -143,11 +147,13 @@ class MessageTransferManager implements MessageTransferManagerInterface
         foreach ($leanPublisherQueueMessageCollectionTransfer->getValidatedMessages() as $message) {
             $messageBodyTransfer = $this->getEventQueueSentMessageBodyTransfer($message);
 
-            if ($this->isDeleteEvent($messageBodyTransfer)) {
+            $eventType = $this->getEventTypeFromEventName($messageBodyTransfer->getEventName());
+
+            if ($eventType === static::EVENT_TYPE_DELETE) {
                 $leanPublisherQueueMessageCollectionTransfer->addDeleteMessage($message);
             }
 
-            if ($this->isWriteEvent($messageBodyTransfer)) {
+            if ($eventType === static::EVENT_TYPE_CREATE || $eventType === static::EVENT_TYPE_UPDATE) {
                 $leanPublisherQueueMessageCollectionTransfer->addWriteMessage($message);
             }
         }
@@ -156,24 +162,15 @@ class MessageTransferManager implements MessageTransferManagerInterface
     }
 
     /**
-     * @param \Generated\Shared\Transfer\EventQueueSendMessageBodyTransfer $messageBodyTransfer
+     * @param string $eventName
      *
-     * @return bool
+     * @return string
      */
-    protected function isDeleteEvent(EventQueueSendMessageBodyTransfer $messageBodyTransfer): bool
+    protected function getEventTypeFromEventName(string $eventName): string
     {
-        return str_ends_with($messageBodyTransfer->getEventName(), '.delete');
-    }
+        $explodedString = explode('.', $eventName);
 
-    /**
-     * @param \Generated\Shared\Transfer\EventQueueSendMessageBodyTransfer $messageBodyTransfer
-     *
-     * @return bool
-     */
-    protected function isWriteEvent(EventQueueSendMessageBodyTransfer $messageBodyTransfer): bool
-    {
-        return str_ends_with($messageBodyTransfer->getEventName(), '.create') ||
-            str_ends_with($messageBodyTransfer->getEventName(), '.update');
+        return end($explodedString);
     }
 
     /**
