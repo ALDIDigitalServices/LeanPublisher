@@ -225,7 +225,7 @@ class MessageTransferManager implements MessageTransferManagerInterface
     protected function formatFilterCriteria(LeanPublisherEventCollectionTransfer $leanPublisherEventCollectionTransfer): array
     {
         $formattedFilterCriteria = [];
-        foreach ($leanPublisherEventCollectionTransfer->getEvents() as $event) {
+        foreach ($leanPublisherEventCollectionTransfer->getEvents() ?? [] as $event) {
             $formattedFilterCriteria[$event->getEventName()] = $event->getFilterProperties();
         }
 
@@ -309,12 +309,16 @@ class MessageTransferManager implements MessageTransferManagerInterface
     {
         array_map(
             static function ($data) {
-                $data->setAcknowledge(true);
+                if ($data instanceof QueueReceiveMessageTransfer) {
+                    $data->setAcknowledge(true);
+                }
 
                 return $data;
             },
-            $queueMessageCollectionTransfer->getValidatedMessages()->getArrayCopy(),
-            $queueMessageCollectionTransfer->getInvalidMessages()->getArrayCopy(),
+            array_merge(
+                $queueMessageCollectionTransfer->getValidatedMessages()->getArrayCopy(),
+                $queueMessageCollectionTransfer->getInvalidMessages()->getArrayCopy()
+            ),
         );
     }
 
