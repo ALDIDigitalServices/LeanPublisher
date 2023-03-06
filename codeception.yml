@@ -1,17 +1,14 @@
 namespace: ALDIDigitalServicesTest
 include:
-    - tests/ALDIDigitalServicesTest/Zed/LeanPublisher
+    - tests/ALDIDigitalServicesTest/*
 paths:
-    tests: tests
-    support: .
-    log: tests/_output
-    data: tests/_data
-    envs: tests/_envs
+    tests: tests/
+    log: tests/_output/
+    data: tests/_data/
+    support: tests/_support/
+    envs: tests/_envs/
 settings:
     suite_class: \PHPUnit\Framework\TestSuite
     colors: true
     memory_limit: 1024M
     log: true
-extensions:
-    enabled: [SprykerTest\Shared\Testify\Helper\WebDriverHelper]
-    config: { SprykerTest\Shared\Testify\Helper\WebDriverHelper: { suites: [Presentation] } }
