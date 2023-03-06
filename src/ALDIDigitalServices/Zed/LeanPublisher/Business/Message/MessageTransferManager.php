@@ -19,6 +19,10 @@ use Spryker\Zed\Event\Business\Exception\MessageTypeNotFoundException;
 
 class MessageTransferManager implements MessageTransferManagerInterface
 {
+    protected const EVENT_TYPE_DELETE = 'delete';
+    protected const EVENT_TYPE_CREATE = 'create';
+    protected const EVENT_TYPE_UPDATE = 'update';
+
     /**
      * @var \Pyz\Zed\Event\Business\EventFacadeInterface
      */
@@ -42,16 +46,31 @@ class MessageTransferManager implements MessageTransferManagerInterface
     }
 
     /**
-     * @param array $queueReceiveMessageTransfers
-     * @param \Generated\Shared\Transfer\LeanPublisherQueueMessageCollectionTransfer $leanPublisherQueueMessageCollection
+     * @param array $queueMessageTransfers
+     * @param \Generated\Shared\Transfer\LeanPublisherEventCollectionTransfer $leanPublisherEventCollectionTransfer
      *
      * @throws \Spryker\Zed\Event\Business\Exception\MessageTypeNotFoundException
      * @return \Generated\Shared\Transfer\LeanPublisherQueueMessageCollectionTransfer
      */
-    public function validateQueueMessages(
-        array $queueReceiveMessageTransfers,
-        LeanPublisherQueueMessageCollectionTransfer $leanPublisherQueueMessageCollection
+    public function validateAndFilterQueueMessages(
+        array $queueMessageTransfers,
+        LeanPublisherEventCollectionTransfer $leanPublisherEventCollectionTransfer
     ): LeanPublisherQueueMessageCollectionTransfer {
+        $leanPublisherQueueMessageCollection = $this->validateQueueMessages($queueMessageTransfers);
+
+        return $this->filterQueueMessageTransfers($leanPublisherQueueMessageCollection, $leanPublisherEventCollectionTransfer);
+    }
+
+    /**
+     * @param array $queueReceiveMessageTransfers
+     *
+     * @throws \Spryker\Zed\Event\Business\Exception\MessageTypeNotFoundException
+     * @return \Generated\Shared\Transfer\LeanPublisherQueueMessageCollectionTransfer
+     */
+    protected function validateQueueMessages(array $queueReceiveMessageTransfers): LeanPublisherQueueMessageCollectionTransfer
+    {
+        $leanPublisherQueueMessageCollection = new LeanPublisherQueueMessageCollectionTransfer();
+
         foreach ($queueReceiveMessageTransfers as $queueReceiveMessageTransfer) {
             $eventQueueSentMessageBodyTransfer = $this->getEventQueueSentMessageBodyTransfer($queueReceiveMessageTransfer);
 
@@ -64,7 +83,7 @@ class MessageTransferManager implements MessageTransferManagerInterface
                 continue;
             }
 
-            $leanPublisherQueueMessageCollection->addValidMessage($queueReceiveMessageTransfer);
+            $leanPublisherQueueMessageCollection->addValidatedMessage($queueReceiveMessageTransfer);
         }
 
         return $leanPublisherQueueMessageCollection;
@@ -77,15 +96,15 @@ class MessageTransferManager implements MessageTransferManagerInterface
      *
      * @return \Generated\Shared\Transfer\LeanPublisherQueueMessageCollectionTransfer
      */
-    public function filterQueueMessageTransfers(
+    protected function filterQueueMessageTransfers(
         LeanPublisherQueueMessageCollectionTransfer $leanPublisherQueueMessageCollection,
         LeanPublisherEventCollectionTransfer $leanPublisherEventCollectionTransfer
     ): LeanPublisherQueueMessageCollectionTransfer {
         $eventEntityFilterCriteria = $this->formatFilterCriteria($leanPublisherEventCollectionTransfer);
 
-        $validMessages = $leanPublisherQueueMessageCollection->getValidMessages();
+        $validatedMessages = $leanPublisherQueueMessageCollection->getValidatedMessages();
         $messagesToKeep = new ArrayObject();
-        foreach ($validMessages as $queueReceiveMessageTransfer) {
+        foreach ($validatedMessages as $queueReceiveMessageTransfer) {
             $eventQueueSentMessageBodyTransfer = $this->getEventQueueSentMessageBodyTransfer($queueReceiveMessageTransfer);
             $eventName = $eventQueueSentMessageBodyTransfer->getEventName();
             $modifiedColumns = $eventQueueSentMessageBodyTransfer->getTransferData()['modified_columns'];
@@ -114,8 +133,44 @@ class MessageTransferManager implements MessageTransferManagerInterface
             }
         }
 
-        return $leanPublisherQueueMessageCollection
-            ->setValidMessages($messagesToKeep);
+        return $leanPublisherQueueMessageCollection->setValidatedMessages($messagesToKeep);
+    }
+
+    /**
+     * @param \Generated\Shared\Transfer\LeanPublisherQueueMessageCollectionTransfer $leanPublisherQueueMessageCollectionTransfer
+     *
+     * @return \Generated\Shared\Transfer\LeanPublisherQueueMessageCollectionTransfer
+     */
+    public function setWriteAndDeleteMessages(
+        LeanPublisherQueueMessageCollectionTransfer $leanPublisherQueueMessageCollectionTransfer
+    ): LeanPublisherQueueMessageCollectionTransfer {
+        foreach ($leanPublisherQueueMessageCollectionTransfer->getValidatedMessages() as $message) {
+            $messageBodyTransfer = $this->getEventQueueSentMessageBodyTransfer($message);
+
+            $eventType = $this->getEventTypeFromEventName($messageBodyTransfer->getEventName());
+
+            if ($eventType === static::EVENT_TYPE_DELETE) {
+                $leanPublisherQueueMessageCollectionTransfer->addDeleteMessage($message);
+            }
+
+            if ($eventType === static::EVENT_TYPE_CREATE || $eventType === static::EVENT_TYPE_UPDATE) {
+                $leanPublisherQueueMessageCollectionTransfer->addWriteMessage($message);
+            }
+        }
+
+        return $leanPublisherQueueMessageCollectionTransfer;
+    }
+
+    /**
+     * @param string $eventName
+     *
+     * @return string
+     */
+    protected function getEventTypeFromEventName(string $eventName): string
+    {
+        $explodedString = explode('.', $eventName);
+
+        return end($explodedString);
     }
 
     /**
@@ -132,7 +187,6 @@ class MessageTransferManager implements MessageTransferManagerInterface
 
         return $groupedQueueReceiveMessageTransfers;
     }
-
 
     /**
      * @param \ArrayObject $eventEntityTransfers
@@ -152,6 +206,18 @@ class MessageTransferManager implements MessageTransferManagerInterface
     }
 
     /**
+     * @param \Generated\Shared\Transfer\QueueReceiveMessageTransfer $queueReceiveMessageTransfer
+     *
+     * @return \Generated\Shared\Transfer\EventQueueSendMessageBodyTransfer
+     */
+    public function getEventQueueSentMessageBodyTransfer(QueueReceiveMessageTransfer $queueReceiveMessageTransfer): EventQueueSendMessageBodyTransfer
+    {
+        return $this->createEventQueueSentMessageBodyTransfer(
+            $queueReceiveMessageTransfer->getQueueMessage()->getBody(),
+        );
+    }
+
+    /**
      * @param \Generated\Shared\Transfer\LeanPublisherEventCollectionTransfer $leanPublisherEventCollectionTransfer
      *
      * @return array
@@ -159,7 +225,7 @@ class MessageTransferManager implements MessageTransferManagerInterface
     protected function formatFilterCriteria(LeanPublisherEventCollectionTransfer $leanPublisherEventCollectionTransfer): array
     {
         $formattedFilterCriteria = [];
-        foreach ($leanPublisherEventCollectionTransfer->getEvents() as $event) {
+        foreach ($leanPublisherEventCollectionTransfer->getEvents() ?? [] as $event) {
             $formattedFilterCriteria[$event->getEventName()] = $event->getFilterProperties();
         }
 
@@ -235,17 +301,25 @@ class MessageTransferManager implements MessageTransferManagerInterface
 
 
     /**
-     * @param \ArrayObject $queueMessages
+     * @param \Generated\Shared\Transfer\LeanPublisherQueueMessageCollectionTransfer $queueMessageCollectionTransfer
      *
      * @return void
      */
-    public function markMessagesAcknowledged(ArrayObject $queueMessages): void
+    public function markMessagesAcknowledged(LeanPublisherQueueMessageCollectionTransfer $queueMessageCollectionTransfer): void
     {
-        array_map(static function ($data) {
-            $data->setAcknowledge(true);
+        array_map(
+            static function ($data) {
+                if ($data instanceof QueueReceiveMessageTransfer) {
+                    $data->setAcknowledge(true);
+                }
 
-            return $data;
-        }, $queueMessages->getArrayCopy());
+                return $data;
+            },
+            array_merge(
+                $queueMessageCollectionTransfer->getValidatedMessages()->getArrayCopy(),
+                $queueMessageCollectionTransfer->getInvalidMessages()->getArrayCopy()
+            ),
+        );
     }
 
     /**
@@ -277,18 +351,6 @@ class MessageTransferManager implements MessageTransferManagerInterface
     protected function logConsumerAction(string $message): void
     {
         $this->eventFacade->logEventMessage('[async] ' . $message);
-    }
-
-    /**
-     * @param \Generated\Shared\Transfer\QueueReceiveMessageTransfer $queueReceiveMessageTransfer
-     *
-     * @return \Generated\Shared\Transfer\EventQueueSendMessageBodyTransfer
-     */
-    protected function getEventQueueSentMessageBodyTransfer(QueueReceiveMessageTransfer $queueReceiveMessageTransfer): EventQueueSendMessageBodyTransfer
-    {
-        return $this->createEventQueueSentMessageBodyTransfer(
-            $queueReceiveMessageTransfer->getQueueMessage()->getBody(),
-        );
     }
 
     /**

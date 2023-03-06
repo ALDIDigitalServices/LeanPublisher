@@ -10,7 +10,8 @@ namespace ALDIDigitalServicesTest\Zed\LeanPublisher\Business\Message;
 use ALDIDigitalServicesTest\Zed\LeanPublisher\LeanPublisherBusinessTester;
 use ArrayObject;
 use Codeception\TestCase\Test;
-use Generated\Shared\Transfer\LeanPublisherQueueMessageCollectionTransfer;
+use Generated\Shared\Transfer\LeanPublisherEventCollectionTransfer;
+use Generated\Shared\Transfer\LeanPublisherEventTransfer;
 use Orm\Zed\Product\Persistence\Map\SpyProductAbstractTableMap;
 use Orm\Zed\ProductOffer\Persistence\Map\SpyProductOfferTableMap;
 use Pyz\Zed\Product\Dependency\ProductEvents;
@@ -37,12 +38,13 @@ class MessageTransferManagerTest extends Test
     /**
      * @dataProvider getFilterCriteriaAndExpectedCount
      *
-     * @param array $filterCriteria
+     * @param \Generated\Shared\Transfer\LeanPublisherEventCollectionTransfer $leanPublisherEventCollectionTransfer
      * @param int $expectedCount
      *
+     * @throws \Exception
      * @return void
      */
-    public function testFilterQueueMessageTransferFiltersQueueMessagesByFilterCriteria(array $filterCriteria, int $expectedCount): void
+    public function testFilterQueueMessageTransferFiltersQueueMessagesByFilterCriteria(LeanPublisherEventCollectionTransfer $leanPublisherEventCollectionTransfer, int $expectedCount): void
     {
         // arrange
         $eventQueueReceiveMessages = [];
@@ -58,19 +60,17 @@ class MessageTransferManagerTest extends Test
             [SpyProductOfferTableMap::COL_CONCRETE_SKU],
         );
 
-        $leanPublisherQueueMessageCollection = (new LeanPublisherQueueMessageCollectionTransfer())
-            ->setValidMessages(new ArrayObject($eventQueueReceiveMessages));
 
         // act
         $filteredQueueMessageTransfers = $this->tester->getMessageTransferManager()
-            ->filterQueueMessageTransfers(
-                $leanPublisherQueueMessageCollection,
-                $filterCriteria,
+            ->validateAndFilterQueueMessages(
+                $eventQueueReceiveMessages,
+                $leanPublisherEventCollectionTransfer,
             );
 
 
         // assert
-        $this->assertCount($expectedCount, $filteredQueueMessageTransfers->getValidMessages());
+        $this->assertCount($expectedCount, $filteredQueueMessageTransfers->getValidatedMessages());
     }
 
     /**
@@ -145,35 +145,38 @@ class MessageTransferManagerTest extends Test
      */
     protected function getFilterCriteriaAndExpectedCount(): array
     {
+        $event1 = (new LeanPublisherEventCollectionTransfer())
+            ->addEvent(
+                (new LeanPublisherEventTransfer())->setEventName(ProductOfferEvents::ENTITY_SPY_PRODUCT_OFFER_CREATE)
+            )
+            ->addEvent(
+                (new LeanPublisherEventTransfer())->setEventName(ProductOfferEvents::ENTITY_SPY_PRODUCT_OFFER_UPDATE)
+                    ->addFilterProperty(SpyProductOfferTableMap::COL_APPROVAL_STATUS)
+            );
+
+        $event2 = (new LeanPublisherEventCollectionTransfer())
+            ->addEvent(
+                (new LeanPublisherEventTransfer())->setEventName(ProductOfferEvents::ENTITY_SPY_PRODUCT_OFFER_CREATE)
+            )
+            ->addEvent(
+                (new LeanPublisherEventTransfer())->setEventName(ProductOfferEvents::ENTITY_SPY_PRODUCT_OFFER_UPDATE)
+                    ->addFilterProperty(SpyProductOfferTableMap::COL_COMPARISON_PRICE)
+            );
+
+        $event3 = (new LeanPublisherEventCollectionTransfer())
+            ->addEvent(
+                (new LeanPublisherEventTransfer())->setEventName(ProductOfferEvents::ENTITY_SPY_PRODUCT_OFFER_CREATE)
+            )
+            ->addEvent(
+                (new LeanPublisherEventTransfer())->setEventName(ProductOfferEvents::ENTITY_SPY_PRODUCT_OFFER_UPDATE)
+                    ->addFilterProperty(SpyProductOfferTableMap::COL_APPROVAL_STATUS)
+                    ->addFilterProperty(SpyProductOfferTableMap::COL_CONCRETE_SKU)
+            );
+
         return [
-            [
-                [
-                    ProductOfferEvents::ENTITY_SPY_PRODUCT_OFFER_CREATE,
-                    ProductOfferEvents::ENTITY_SPY_PRODUCT_OFFER_UPDATE => [
-                        SpyProductOfferTableMap::COL_APPROVAL_STATUS,
-                    ],
-                ],
-                1, // expected count after filtering
-            ],
-            [
-                [
-                    ProductOfferEvents::ENTITY_SPY_PRODUCT_OFFER_CREATE,
-                    ProductOfferEvents::ENTITY_SPY_PRODUCT_OFFER_UPDATE => [
-                        SpyProductOfferTableMap::COL_COMPARISON_PRICE,
-                    ],
-                ],
-                0, // expected count after filtering
-            ],
-            [
-                [
-                    ProductOfferEvents::ENTITY_SPY_PRODUCT_OFFER_CREATE,
-                    ProductOfferEvents::ENTITY_SPY_PRODUCT_OFFER_UPDATE => [
-                        SpyProductOfferTableMap::COL_APPROVAL_STATUS,
-                        SpyProductOfferTableMap::COL_CONCRETE_SKU,
-                    ],
-                ],
-                2, // expected count after filteringF
-            ],
+                [$event1, 1,], // expected count after filtering
+                [$event2, 0,], // expected count after filtering
+                [$event3, 2,], // expected count after filtering
         ];
     }
 }

@@ -10,6 +10,7 @@ namespace ALDIDigitalServices\Zed\LeanPublisher;
 use ALDIDigitalServices\Zed\LeanPublisher\Communication\Plugin\Synchronization\SearchSynchronizationPlugin;
 use ALDIDigitalServices\Zed\LeanPublisher\Communication\Plugin\Synchronization\StorageSynchronizationPlugin;
 use Pyz\Zed\Event\Business\EventFacadeInterface;
+use Pyz\Zed\Store\Business\StoreFacadeInterface;
 use Spryker\Client\Search\SearchClientInterface;
 use Spryker\Client\Storage\StorageClientInterface;
 use Spryker\Service\UtilEncoding\UtilEncodingServiceInterface;
@@ -19,6 +20,7 @@ use Spryker\Zed\Kernel\Container;
 class LeanPublisherDependencyProvider extends AbstractBundleDependencyProvider
 {
     public const FACADE_EVENT = 'FACADE_EVENT';
+    public const FACADE_STORE = 'FACADE_STORE';
 
     public const CLIENT_SEARCH = 'CLIENT_SEARCH';
     public const CLIENT_STORAGE = 'CLIENT_STORAGE';
@@ -39,6 +41,7 @@ class LeanPublisherDependencyProvider extends AbstractBundleDependencyProvider
         $container = $this->addUtilEncodingService($container);
         $container = $this->addEventHandlerPlugins($container);
         $container = $this->addSynchronizationPlugins($container);
+        $container = $this->addStoreFacade($container);
 
         return $container;
     }
@@ -86,16 +89,29 @@ class LeanPublisherDependencyProvider extends AbstractBundleDependencyProvider
         return $container;
     }
 
-
-   /**
-    * @param \Spryker\Zed\Kernel\Container $container
-    *
-    * @return \Spryker\Zed\Kernel\Container
-    */
+    /**
+     * @param \Spryker\Zed\Kernel\Container $container
+     *
+     * @return \Spryker\Zed\Kernel\Container
+     */
     protected function addEventFacade(Container $container): Container
     {
         $container->set(static::FACADE_EVENT, static function (Container $container): EventFacadeInterface {
             return $container->getLocator()->event()->facade();
+        });
+
+        return $container;
+    }
+
+    /**
+     * @param \Spryker\Zed\Kernel\Container $container
+     *
+     * @return \Spryker\Zed\Kernel\Container
+     */
+    protected function addStoreFacade(Container $container): Container
+    {
+        $container->set(static::FACADE_STORE, static function (Container $container): StoreFacadeInterface {
+            return $container->getLocator()->store()->facade();
         });
 
         return $container;

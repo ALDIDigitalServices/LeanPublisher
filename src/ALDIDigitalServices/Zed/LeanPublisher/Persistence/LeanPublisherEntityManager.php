@@ -8,6 +8,9 @@
 namespace ALDIDigitalServices\Zed\LeanPublisher\Persistence;
 
 use Generated\Shared\Transfer\LeanPublishAndSynchronizationRequestTransfer;
+use Propel\Runtime\ActiveQuery\Criteria;
+use Propel\Runtime\ActiveQuery\Criterion\AbstractCriterion;
+use Propel\Runtime\ActiveQuery\ModelCriteria;
 use Pyz\Zed\Kernel\Persistence\EntityManager\BatchEntityManagerTrait;
 use Spryker\Zed\Kernel\Persistence\AbstractEntityManager;
 
@@ -25,18 +28,20 @@ class LeanPublisherEntityManager extends AbstractEntityManager implements LeanPu
      */
     public function writePublishData(LeanPublishAndSynchronizationRequestTransfer $leanPublishAndSynchronizationRequestTransfer): void
     {
-        $writeDataCollection = $leanPublishAndSynchronizationRequestTransfer->getPublishDataWrite();
+        $publishDataWrite = $leanPublishAndSynchronizationRequestTransfer->getPublishDataWrite();
 
-        if (empty($writeDataCollection)) {
+        if ($publishDataWrite === null || empty($publishDataWrite->getData())) {
             return;
         }
 
+        $writeData = $publishDataWrite->getData()->getArrayCopy();
+
         $synchronizationEntities = $this->getFactory()->createQueryInstance($leanPublishAndSynchronizationRequestTransfer->getQueryClass())
-            ->filterByReference_In(array_keys($writeDataCollection))
+            ->filterByReference_In(array_keys($writeData))
             ->find();
 
         $writeEntities = [];
-        foreach ($writeDataCollection as $reference => $writeItem) {
+        foreach ($writeData as $reference => $writeItem) {
             foreach ($synchronizationEntities as $entity) {
                 if ($entity->getReference() === $reference) {
                     $entity->fromArray($writeItem);
@@ -51,7 +56,7 @@ class LeanPublisherEntityManager extends AbstractEntityManager implements LeanPu
 
             $entity = $this->getFactory()->createEntityFromQueryClass($leanPublishAndSynchronizationRequestTransfer->getQueryClass());
             /* @phpstan-ignore-next-line */
-            $entity->fromArray($writeItem);
+            $entity->fromArray($writeItem->toArray());
 
             $writeEntities[$reference] = $entity;
         }
@@ -70,14 +75,39 @@ class LeanPublisherEntityManager extends AbstractEntityManager implements LeanPu
      */
     public function deletePublishData(LeanPublishAndSynchronizationRequestTransfer $leanPublishAndSynchronizationRequestTransfer): void
     {
-        $references = array_keys($leanPublishAndSynchronizationRequestTransfer->getPublishDataDelete());
+        $publishDataDelete = $leanPublishAndSynchronizationRequestTransfer->getPublishDataDelete();
 
-        if (empty($references)) {
+        if ($publishDataDelete === null || empty($publishDataDelete->getData())) {
             return;
         }
-        $result = $this->getFactory()->createQueryInstance($leanPublishAndSynchronizationRequestTransfer->getQueryClass())
-            ->filterByReference_In($references)
-            ->find();
+
+        $references = [];
+        $originIds = [];
+        foreach ($publishDataDelete->getData() as $deleteItem) {
+            $originIds[] = $deleteItem->getIdOrigin();
+            $references[] = $deleteItem->getReference();
+        }
+
+        $originIds = array_filter($originIds);
+        $references = array_filter($references);
+
+        if (empty($references) && empty($originIds)) {
+            return;
+        }
+
+        $query = $this->getFactory()->createQueryInstance($leanPublishAndSynchronizationRequestTransfer->getQueryClass());
+
+        if ($originIds) {
+            $idOriginCriterion = $this->createCriterion($query, static::COL_ID_ORIGIN, $this->mapToIntItems($originIds));
+            $query->addOr($idOriginCriterion);
+        }
+
+        if ($references) {
+            $referencesCriterion = $this->createCriterion($query, static::COL_REFERENCE, $references);
+            $query->addOr($referencesCriterion);
+        }
+
+        $result = $query->find();
 
         if ($result->count()) {
             $entitiesToDelete = $result;
@@ -85,6 +115,33 @@ class LeanPublisherEntityManager extends AbstractEntityManager implements LeanPu
         }
 
         $leanPublishAndSynchronizationRequestTransfer->setSyncDataDelete($result->getArrayCopy());
+    }
+
+    /**
+     * @param \Propel\Runtime\ActiveQuery\ModelCriteria $query
+     * @param string $column
+     * @param mixed $value
+     * @param string $comparison
+     *
+     * @return \Propel\Runtime\ActiveQuery\Criterion\AbstractCriterion
+     */
+    protected function createCriterion(ModelCriteria $query, string $column, mixed $value, string $comparison = Criteria::IN): AbstractCriterion
+    {
+        return $query->getNewCriterion(
+            $column,
+            $value,
+            $comparison
+        );
+    }
+
+    /**
+     * @param array $values
+     *
+     * @return int[]
+     */
+    protected function mapToIntItems(array $values): array
+    {
+        return array_map(static fn($value): int => (int)$value, $values);
     }
 
     /**

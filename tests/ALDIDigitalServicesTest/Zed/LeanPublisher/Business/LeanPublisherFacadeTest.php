@@ -8,10 +8,12 @@
 namespace ALDIDigitalServicesTest\Zed\LeanPublisher\Business;
 
 use ALDIDigitalServices\Zed\LeanPublisher\Business\Exception\EventHandlerNotFoundException;
+use ALDIDigitalServices\Zed\LeanPublisher\Business\Trait\LeanPublisherEventRegistrationTrait;
 use ALDIDigitalServices\Zed\LeanPublisher\Communication\Plugin\LeanPublisherEventHandlerPluginInterface;
 use ALDIDigitalServices\Zed\LeanPublisher\LeanPublisherDependencyProvider;
 use ALDIDigitalServicesTest\Zed\LeanPublisher\LeanPublisherBusinessTester;
 use Codeception\TestCase\Test;
+use Generated\Shared\Transfer\LeanPublisherEventCollectionTransfer;
 use Orm\Zed\ProductOffer\Persistence\Map\SpyProductOfferTableMap;
 use Spryker\Zed\ProductOffer\Dependency\ProductOfferEvents;
 
@@ -27,6 +29,8 @@ use Spryker\Zed\ProductOffer\Dependency\ProductOfferEvents;
  */
 class LeanPublisherFacadeTest extends Test
 {
+    use LeanPublisherEventRegistrationTrait;
+
     /**
      * @var \ALDIDigitalServicesTest\Zed\LeanPublisher\LeanPublisherBusinessTester
      */
@@ -109,13 +113,12 @@ class LeanPublisherFacadeTest extends Test
             ->method('loadData')
             ->willReturn([]);
 
+        $this->registerForEvent(ProductOfferEvents::ENTITY_SPY_PRODUCT_OFFER_UPDATE, [SpyProductOfferTableMap::COL_CONCRETE_SKU]);
+        $subscribedEventCollection = $this->getEventCollection();
+
         $leanPublisherEventHandlerPluginMock
-            ->method('getPropertyFilterMapping')
-            ->willReturn([
-                ProductOfferEvents::ENTITY_SPY_PRODUCT_OFFER_UPDATE => [
-                    SpyProductOfferTableMap::COL_CONCRETE_SKU, // COL_CONCRETE_SKU
-                ],
-            ]);
+            ->method('getSubscribedEventCollection')
+            ->willReturn($subscribedEventCollection);
 
         $this->tester->setDependency(LeanPublisherDependencyProvider::PLUGINS_EVENT_HANDLER, [
             $leanPublisherEventHandlerPluginMock->getQueueName() => $leanPublisherEventHandlerPluginMock,
@@ -149,13 +152,13 @@ class LeanPublisherFacadeTest extends Test
             ->method('getQueueName')
             ->willReturn(LeanPublisherBusinessTester::DEFAULT_QUEUE_NAME);
 
+
+        $this->registerForEvent(ProductOfferEvents::ENTITY_SPY_PRODUCT_OFFER_UPDATE, [SpyProductOfferTableMap::COL_APPROVAL_STATUS]);
+        $subscribedEventCollection = $this->getEventCollection();
+
         $leanPublisherEventHandlerPluginMock
-            ->method('getPropertyFilterMapping')
-            ->willReturn([
-                ProductOfferEvents::ENTITY_SPY_PRODUCT_OFFER_UPDATE => [
-                    SpyProductOfferTableMap::COL_APPROVAL_STATUS,
-                ],
-            ]);
+            ->method('getSubscribedEventCollection')
+            ->willReturn($subscribedEventCollection);
 
         $this->tester->setDependency(LeanPublisherDependencyProvider::PLUGINS_EVENT_HANDLER, [
             $leanPublisherEventHandlerPluginMock->getQueueName() => $leanPublisherEventHandlerPluginMock,
@@ -191,13 +194,12 @@ class LeanPublisherFacadeTest extends Test
             ->method('getQueueName')
             ->willReturn(LeanPublisherBusinessTester::DEFAULT_QUEUE_NAME);
 
+        $this->registerForEvent(ProductOfferEvents::ENTITY_SPY_PRODUCT_OFFER_UPDATE, [SpyProductOfferTableMap::COL_CONCRETE_SKU]);
+        $subscribedEventCollection = $this->getEventCollection();
+
         $leanPublisherEventHandlerPluginMock
-            ->method('getPropertyFilterMapping')
-            ->willReturn([
-                ProductOfferEvents::ENTITY_SPY_PRODUCT_OFFER_UPDATE => [
-                    SpyProductOfferTableMap::COL_CONCRETE_SKU,
-                ],
-            ]);
+            ->method('getSubscribedEventCollection')
+            ->willReturn($subscribedEventCollection);
 
         // expect load data is never called because message was filtered out
         $leanPublisherEventHandlerPluginMock
@@ -238,9 +240,10 @@ class LeanPublisherFacadeTest extends Test
             ->method('getQueueName')
             ->willReturn(LeanPublisherBusinessTester::DEFAULT_QUEUE_NAME);
 
+
         $leanPublisherEventHandlerPluginMock
-            ->method('getPropertyFilterMapping')
-            ->willReturn([]); // no filter mapping given
+            ->method('getSubscribedEventCollection')
+            ->willReturn(new LeanPublisherEventCollectionTransfer()); // no filter mapping given
 
         // expect load data is called because no message was filtered out
         $leanPublisherEventHandlerPluginMock
