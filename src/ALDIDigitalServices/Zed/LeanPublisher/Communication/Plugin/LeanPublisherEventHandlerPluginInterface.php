@@ -51,4 +51,14 @@ interface LeanPublisherEventHandlerPluginInterface
      * @return array
      */
     public function loadData(array $queueMessages): array;
+
+    /**
+     * Specification:
+     * - returns resource name for the entity
+     *
+     * @api
+     *
+     * @return string
+     */
+    public function getResourceName(): string;
 }
