@@ -15,8 +15,8 @@ use Spryker\Zed\Event\Business\Exception\MessageTypeNotFoundException;
 class MessageTransferManager implements MessageTransferManagerInterface
 {
     protected const EVENT_TYPE_DELETE = 'delete';
-    protected const EVENT_TYPE_CREATE = 'create';
-    protected const EVENT_TYPE_UPDATE = 'update';
+
+    protected const EVENT_TYPEs_WRITE = ['create', 'update', 'publish'];
 
     /**
      * @var \Pyz\Zed\Event\Business\EventFacadeInterface
@@ -148,7 +148,7 @@ class MessageTransferManager implements MessageTransferManagerInterface
                 $leanPublisherQueueMessageCollectionTransfer->addDeleteMessage($message);
             }
 
-            if ($eventType === static::EVENT_TYPE_CREATE || $eventType === static::EVENT_TYPE_UPDATE) {
+            if (in_array($eventType, static::EVENT_TYPEs_WRITE)) {
                 $leanPublisherQueueMessageCollectionTransfer->addWriteMessage($message);
             }
         }

@@ -6,6 +6,7 @@ use ALDIDigitalServices\Zed\LeanPublisher\Business\Message\MessageTransferManage
 use ALDIDigitalServices\Zed\LeanPublisher\Business\Publish\PublisherInterface;
 use ALDIDigitalServices\Zed\LeanPublisher\Business\Resolver\EventHandlerPluginResolver;
 use ALDIDigitalServices\Zed\LeanPublisher\Business\Synchronization\Synchronization;
+use ALDIDigitalServices\Zed\LeanPublisher\Business\Trait\LeanPublisherDataCollectionTrait;
 use ALDIDigitalServices\Zed\LeanPublisher\Communication\Plugin\LeanPublisherEventHandlerPluginInterface;
 use ALDIDigitalServices\Zed\LeanPublisher\Communication\Plugin\LeanPublisherSearchPublishPluginInterface;
 use ALDIDigitalServices\Zed\LeanPublisher\Communication\Plugin\LeanPublisherStoragePublishPluginInterface;
@@ -16,6 +17,8 @@ use Pyz\Zed\Store\Business\StoreFacadeInterface;
 
 class LeanPublisherEventConsumer implements LeanPublisherEventConsumerInterface
 {
+    use LeanPublisherDataCollectionTrait;
+
     /**
      * @var \ALDIDigitalServices\Zed\LeanPublisher\Business\Message\MessageTransferManagerInterface
      */
@@ -121,7 +124,12 @@ class LeanPublisherEventConsumer implements LeanPublisherEventConsumerInterface
      */
     protected function hasNoPublishData(LeanPublishAndSynchronizationRequestTransfer $leanPublishAndSynchronizationRequest): bool
     {
-        return $leanPublishAndSynchronizationRequest->getPublishDataWrite() !== null &&
+        return (
+                $leanPublishAndSynchronizationRequest->getPublishDataWrite() === null &&
+                $leanPublishAndSynchronizationRequest->getPublishDataDelete() === null
+            )
+            ||
+            $leanPublishAndSynchronizationRequest->getPublishDataWrite() !== null &&
             $leanPublishAndSynchronizationRequest->getPublishDataDelete() !== null &&
             empty($leanPublishAndSynchronizationRequest->getPublishDataWrite()->getData()) &&
             empty($leanPublishAndSynchronizationRequest->getPublishDataDelete()->getData());
@@ -169,8 +177,10 @@ class LeanPublisherEventConsumer implements LeanPublisherEventConsumerInterface
         $storeName = $this->storeFacade->getCurrentStore()->getName();
 
         foreach ($deleteMessages as $deleteMessage) {
-            $deleteMessage = $this->prepareDeleteMessage($deleteMessage, $storeName);
-            $leanPublishAndSynchronizationRequest->addPublishDeleteData($deleteMessage);
+            $leanPublishAndSynchronizationRequest = $this->addToDeleteDataCollection(
+                $leanPublishAndSynchronizationRequest,
+                $this->prepareDeleteMessage($deleteMessage, $storeName)
+            );
         }
 
         if ($eventHandler instanceof LeanPublisherSearchPublishPluginInterface) {
@@ -184,9 +194,9 @@ class LeanPublisherEventConsumer implements LeanPublisherEventConsumerInterface
      * @param $deleteMessage
      * @param string $storeName
      *
-     * @return array
+     * @return \Generated\Shared\Transfer\LeanPublisherDataTransfer
      */
-    protected function prepareDeleteMessage($deleteMessage, string $storeName): array
+    protected function prepareDeleteMessage($deleteMessage, string $storeName): LeanPublisherDataTransfer
     {
         $originId = $this->messageTransferManager
             ->getEventQueueSentMessageBodyTransfer($deleteMessage)
@@ -195,7 +205,8 @@ class LeanPublisherEventConsumer implements LeanPublisherEventConsumerInterface
         return (new LeanPublisherDataTransfer())
             ->setStore($storeName)
             ->setIdOrigin($originId)
-            ->modifiedToArray();
+            ->setReference($originId);
+
     }
 
     /**
