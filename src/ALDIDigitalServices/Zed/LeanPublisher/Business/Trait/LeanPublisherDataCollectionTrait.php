@@ -5,6 +5,7 @@ namespace ALDIDigitalServices\Zed\LeanPublisher\Business\Trait;
 use Generated\Shared\Transfer\LeanPublishAndSynchronizationRequestTransfer;
 use Generated\Shared\Transfer\LeanPublisherDataCollectionTransfer;
 use Generated\Shared\Transfer\LeanPublisherDataTransfer;
+use Spryker\Shared\Kernel\Transfer\Exception\RequiredTransferPropertyException;
 
 trait LeanPublisherDataCollectionTrait
 {
@@ -96,13 +97,17 @@ trait LeanPublisherDataCollectionTrait
     /**
      * @param \Generated\Shared\Transfer\LeanPublisherDataTransfer $leanPublisherDataTransfer
      *
+     * @throws \Spryker\Shared\Kernel\Transfer\Exception\RequiredTransferPropertyException
      * @return void
      */
     protected function requireProperties(LeanPublisherDataTransfer $leanPublisherDataTransfer): void
     {
-        $leanPublisherDataTransfer
-            ->requireIdOrigin()
-            ->requireReference()
-            ->requireStore();
+        $leanPublisherDataTransfer->requireStore();
+
+        if ($leanPublisherDataTransfer->getReference() === null && $leanPublisherDataTransfer->getIdOrigin() === null) {
+            throw new RequiredTransferPropertyException(
+                'One of \'reference\' or \'idOrigin\' is needed to be set.'
+            );
+        }
     }
 }

@@ -16,6 +16,9 @@ class LeanPublisherEntityManager extends AbstractEntityManager implements LeanPu
 {
     use BatchEntityManagerTrait;
 
+    protected const COL_ID_ORIGIN = 'id_origin';
+    protected const COL_REFERENCE = 'reference';
+
     /**
      * @param \Generated\Shared\Transfer\LeanPublishAndSynchronizationRequestTransfer $leanPublishAndSynchronizationRequestTransfer
      *
