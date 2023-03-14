@@ -2,26 +2,30 @@
 
 namespace ALDIDigitalServices\Zed\LeanPublisher\Business\Message;
 
+use ALDIDigitalServices\Zed\LeanPublisher\Business\Exception\MissingTableNameException;
 use ArrayObject;
 use Generated\Shared\Transfer\EventQueueSendMessageBodyTransfer;
 use Generated\Shared\Transfer\LeanPublisherEventCollectionTransfer;
 use Generated\Shared\Transfer\LeanPublisherQueueMessageCollectionTransfer;
 use Generated\Shared\Transfer\QueueReceiveMessageTransfer;
-use Pyz\Zed\Event\Business\EventFacadeInterface;
 use Spryker\Service\UtilEncoding\UtilEncodingServiceInterface;
 use Spryker\Shared\Event\EventConfig as SharedEventConfig;
+use Spryker\Shared\Log\LoggerTrait;
 use Spryker\Zed\Event\Business\Exception\MessageTypeNotFoundException;
 
 class MessageTransferManager implements MessageTransferManagerInterface
 {
-    protected const EVENT_TYPE_DELETE = 'delete';
-
-    protected const EVENT_TYPEs_WRITE = ['create', 'update', 'publish'];
+    use LoggerTrait;
 
     /**
-     * @var \Pyz\Zed\Event\Business\EventFacadeInterface
+     * @var string
      */
-    protected EventFacadeInterface $eventFacade;
+    protected const EVENT_TYPE_DELETE = 'delete';
+
+    /**
+     * @var array
+     */
+    protected const EVENT_TYPES_WRITE = ['create', 'update', 'publish'];
 
     /**
      * @var \Spryker\Service\UtilEncoding\UtilEncodingServiceInterface
@@ -29,14 +33,10 @@ class MessageTransferManager implements MessageTransferManagerInterface
     protected UtilEncodingServiceInterface $utilEncodingService;
 
     /**
-     * @param \Pyz\Zed\Event\Business\EventFacadeInterface $eventFacade
      * @param \Spryker\Service\UtilEncoding\UtilEncodingServiceInterface $utilEncodingService
      */
-    public function __construct(
-        EventFacadeInterface $eventFacade,
-        UtilEncodingServiceInterface $utilEncodingService
-    ) {
-        $this->eventFacade = $eventFacade;
+    public function __construct(UtilEncodingServiceInterface $utilEncodingService)
+    {
         $this->utilEncodingService = $utilEncodingService;
     }
 
@@ -44,7 +44,6 @@ class MessageTransferManager implements MessageTransferManagerInterface
      * @param array $queueMessageTransfers
      * @param \Generated\Shared\Transfer\LeanPublisherEventCollectionTransfer $leanPublisherEventCollectionTransfer
      *
-     * @throws \Spryker\Zed\Event\Business\Exception\MessageTypeNotFoundException
      * @return \Generated\Shared\Transfer\LeanPublisherQueueMessageCollectionTransfer
      */
     public function validateAndFilterQueueMessages(
@@ -59,7 +58,6 @@ class MessageTransferManager implements MessageTransferManagerInterface
     /**
      * @param array $queueReceiveMessageTransfers
      *
-     * @throws \Spryker\Zed\Event\Business\Exception\MessageTypeNotFoundException
      * @return \Generated\Shared\Transfer\LeanPublisherQueueMessageCollectionTransfer
      */
     protected function validateQueueMessages(array $queueReceiveMessageTransfers): LeanPublisherQueueMessageCollectionTransfer
@@ -67,7 +65,7 @@ class MessageTransferManager implements MessageTransferManagerInterface
         $leanPublisherQueueMessageCollection = new LeanPublisherQueueMessageCollectionTransfer();
 
         foreach ($queueReceiveMessageTransfers as $queueReceiveMessageTransfer) {
-            $eventQueueSentMessageBodyTransfer = $this->getEventQueueSentMessageBodyTransfer($queueReceiveMessageTransfer);
+            $eventQueueSentMessageBodyTransfer = $this->getEventQueueSendMessageBodyTransfer($queueReceiveMessageTransfer);
 
             if (!$this->isMessageBodyValid($eventQueueSentMessageBodyTransfer)) {
                 $queueReceiveMessageTransfer = $this->markMessageAsFailed(
@@ -75,6 +73,7 @@ class MessageTransferManager implements MessageTransferManagerInterface
                     'Message body is not valid'
                 );
                 $leanPublisherQueueMessageCollection->addInvalidMessage($queueReceiveMessageTransfer);
+
                 continue;
             }
 
@@ -86,7 +85,6 @@ class MessageTransferManager implements MessageTransferManagerInterface
 
     /**
      * @param \Generated\Shared\Transfer\LeanPublisherQueueMessageCollectionTransfer $leanPublisherQueueMessageCollection
-     *
      * @param \Generated\Shared\Transfer\LeanPublisherEventCollectionTransfer $leanPublisherEventCollectionTransfer
      *
      * @return \Generated\Shared\Transfer\LeanPublisherQueueMessageCollectionTransfer
@@ -100,13 +98,14 @@ class MessageTransferManager implements MessageTransferManagerInterface
         $validatedMessages = $leanPublisherQueueMessageCollection->getValidatedMessages();
         $messagesToKeep = new ArrayObject();
         foreach ($validatedMessages as $queueReceiveMessageTransfer) {
-            $eventQueueSentMessageBodyTransfer = $this->getEventQueueSentMessageBodyTransfer($queueReceiveMessageTransfer);
+            $eventQueueSentMessageBodyTransfer = $this->getEventQueueSendMessageBodyTransfer($queueReceiveMessageTransfer);
             $eventName = $eventQueueSentMessageBodyTransfer->getEventName();
             $modifiedColumns = $eventQueueSentMessageBodyTransfer->getTransferData()['modified_columns'];
 
             if (empty($eventEntityFilterCriteria)) {
                 // no filter mapping, everything is valid
                 $messagesToKeep->append($queueReceiveMessageTransfer);
+
                 continue;
             }
 
@@ -114,6 +113,7 @@ class MessageTransferManager implements MessageTransferManagerInterface
                 // if there is no property mapping, event is valid
                 if (empty($eventEntityFilterCriteria[$eventName])) {
                     $messagesToKeep->append($queueReceiveMessageTransfer);
+
                     continue;
                 }
 
@@ -140,7 +140,7 @@ class MessageTransferManager implements MessageTransferManagerInterface
         LeanPublisherQueueMessageCollectionTransfer $leanPublisherQueueMessageCollectionTransfer
     ): LeanPublisherQueueMessageCollectionTransfer {
         foreach ($leanPublisherQueueMessageCollectionTransfer->getValidatedMessages() as $message) {
-            $messageBodyTransfer = $this->getEventQueueSentMessageBodyTransfer($message);
+            $messageBodyTransfer = $this->getEventQueueSendMessageBodyTransfer($message);
 
             $eventType = $this->getEventTypeFromEventName($messageBodyTransfer->getEventName());
 
@@ -148,7 +148,7 @@ class MessageTransferManager implements MessageTransferManagerInterface
                 $leanPublisherQueueMessageCollectionTransfer->addDeleteMessage($message);
             }
 
-            if (in_array($eventType, static::EVENT_TYPEs_WRITE)) {
+            if (in_array($eventType, static::EVENT_TYPES_WRITE, true)) {
                 $leanPublisherQueueMessageCollectionTransfer->addWriteMessage($message);
             }
         }
@@ -192,8 +192,7 @@ class MessageTransferManager implements MessageTransferManagerInterface
     {
         $eventsGroupedByTable = [];
         foreach ($eventEntityTransfers as $eventEntityTransfer) {
-            $eventQueueSentMessageBodyTransfer = $this->getEventQueueSentMessageBodyTransfer($eventEntityTransfer);
-            $tableName = $eventQueueSentMessageBodyTransfer->getTransferData()['name'];
+            $tableName = $this->resolveTableNameFromMessageBody($eventEntityTransfer);
             $eventsGroupedByTable[$tableName][] = $eventEntityTransfer;
         }
 
@@ -203,9 +202,33 @@ class MessageTransferManager implements MessageTransferManagerInterface
     /**
      * @param \Generated\Shared\Transfer\QueueReceiveMessageTransfer $queueReceiveMessageTransfer
      *
+     * @throws \ALDIDigitalServices\Zed\LeanPublisher\Business\Exception\MissingTableNameException
+     *
+     * @return string
+     */
+    protected function resolveTableNameFromMessageBody(QueueReceiveMessageTransfer $queueReceiveMessageTransfer): string
+    {
+        $eventQueueSendMessageBodyTransfer = $this->getEventQueueSendMessageBodyTransfer($queueReceiveMessageTransfer);
+
+        if (isset($eventQueueSendMessageBodyTransfer->getTransferData()['name'])) {
+            return $eventQueueSendMessageBodyTransfer->getTransferData()['name'];
+        }
+
+        if ($eventQueueSendMessageBodyTransfer->getEventName()) {
+            $explodedEventName = explode('.', $eventQueueSendMessageBodyTransfer->getEventName());
+
+            return $explodedEventName[1];
+        }
+
+        throw new MissingTableNameException('Was not able to resolve table name from message. Neither \'name\' nor \'eventName\' was set');
+    }
+
+    /**
+     * @param \Generated\Shared\Transfer\QueueReceiveMessageTransfer $queueReceiveMessageTransfer
+     *
      * @return \Generated\Shared\Transfer\EventQueueSendMessageBodyTransfer
      */
-    public function getEventQueueSentMessageBodyTransfer(QueueReceiveMessageTransfer $queueReceiveMessageTransfer): EventQueueSendMessageBodyTransfer
+    public function getEventQueueSendMessageBodyTransfer(QueueReceiveMessageTransfer $queueReceiveMessageTransfer): EventQueueSendMessageBodyTransfer
     {
         return $this->createEventQueueSentMessageBodyTransfer(
             $queueReceiveMessageTransfer->getQueueMessage()->getBody(),
@@ -226,7 +249,6 @@ class MessageTransferManager implements MessageTransferManagerInterface
 
         return $formattedFilterCriteria;
     }
-
 
     /**
      * @param \Generated\Shared\Transfer\EventQueueSendMessageBodyTransfer $eventQueueSendMessageBodyTransfer
@@ -276,7 +298,6 @@ class MessageTransferManager implements MessageTransferManagerInterface
      * @param \Generated\Shared\Transfer\QueueReceiveMessageTransfer $queueMessageTransfer
      * @param string $errorMessage
      *
-     * @throws \Spryker\Zed\Event\Business\Exception\MessageTypeNotFoundException
      * @return \Generated\Shared\Transfer\QueueReceiveMessageTransfer
      */
     protected function markMessageAsFailed(QueueReceiveMessageTransfer $queueMessageTransfer, string $errorMessage = ''): QueueReceiveMessageTransfer
@@ -293,7 +314,6 @@ class MessageTransferManager implements MessageTransferManagerInterface
 
         return $queueMessageTransfer;
     }
-
 
     /**
      * @param \Generated\Shared\Transfer\LeanPublisherQueueMessageCollectionTransfer $queueMessageCollectionTransfer
@@ -337,7 +357,6 @@ class MessageTransferManager implements MessageTransferManagerInterface
         $queueMessageTransfer->getQueueMessage()->setBody($this->utilEncodingService->encodeJson($queueMessageBody));
     }
 
-
     /**
      * @param string $message
      *
@@ -345,7 +364,7 @@ class MessageTransferManager implements MessageTransferManagerInterface
      */
     protected function logConsumerAction(string $message): void
     {
-        $this->eventFacade->logEventMessage('[async] ' . $message);
+        $this->getLogger()->info('[async] ' . $message);
     }
 
     /**

@@ -5,7 +5,6 @@ namespace ALDIDigitalServices\Zed\LeanPublisher\Business\Trait;
 use Generated\Shared\Transfer\LeanPublishAndSynchronizationRequestTransfer;
 use Generated\Shared\Transfer\LeanPublisherDataCollectionTransfer;
 use Generated\Shared\Transfer\LeanPublisherDataTransfer;
-use Spryker\Shared\Kernel\Transfer\Exception\RequiredTransferPropertyException;
 
 trait LeanPublisherDataCollectionTrait
 {
@@ -18,7 +17,7 @@ trait LeanPublisherDataCollectionTrait
     public function addToWriteDataCollection(
         LeanPublishAndSynchronizationRequestTransfer $leanPublishAndSynchronizationRequestTransfer,
         LeanPublisherDataTransfer $leanPublisherDataTransfer
-    ): \Generated\Shared\Transfer\LeanPublishAndSynchronizationRequestTransfer {
+    ): LeanPublishAndSynchronizationRequestTransfer {
         $this->requireProperties($leanPublisherDataTransfer);
 
         $dataCollectionTransfer = $this->getDataCollectionTransfer($leanPublishAndSynchronizationRequestTransfer->getPublishDataWrite());
@@ -45,7 +44,7 @@ trait LeanPublisherDataCollectionTrait
     public function addToDeleteDataCollection(
         LeanPublishAndSynchronizationRequestTransfer $leanPublishAndSynchronizationRequestTransfer,
         LeanPublisherDataTransfer $leanPublisherDataTransfer
-    ): \Generated\Shared\Transfer\LeanPublishAndSynchronizationRequestTransfer {
+    ): LeanPublishAndSynchronizationRequestTransfer {
         $this->requireProperties($leanPublisherDataTransfer);
 
         $dataCollectionTransfer = $this->getDataCollectionTransfer($leanPublishAndSynchronizationRequestTransfer->getPublishDataDelete());
@@ -64,7 +63,7 @@ trait LeanPublisherDataCollectionTrait
     }
 
     /**
-     * @param null|\Generated\Shared\Transfer\LeanPublisherDataCollectionTransfer $leanPublisherDataCollectionTransfer
+     * @param \Generated\Shared\Transfer\LeanPublisherDataCollectionTransfer|null $leanPublisherDataCollectionTransfer
      *
      * @return \Generated\Shared\Transfer\LeanPublisherDataCollectionTransfer
      */
@@ -97,17 +96,10 @@ trait LeanPublisherDataCollectionTrait
     /**
      * @param \Generated\Shared\Transfer\LeanPublisherDataTransfer $leanPublisherDataTransfer
      *
-     * @throws \Spryker\Shared\Kernel\Transfer\Exception\RequiredTransferPropertyException
      * @return void
      */
     protected function requireProperties(LeanPublisherDataTransfer $leanPublisherDataTransfer): void
     {
-        $leanPublisherDataTransfer->requireStore();
-
-        if ($leanPublisherDataTransfer->getReference() === null && $leanPublisherDataTransfer->getIdOrigin() === null) {
-            throw new RequiredTransferPropertyException(
-                'One of \'reference\' or \'idOrigin\' is needed to be set.'
-            );
-        }
+        $leanPublisherDataTransfer->requireReference();
     }
 }

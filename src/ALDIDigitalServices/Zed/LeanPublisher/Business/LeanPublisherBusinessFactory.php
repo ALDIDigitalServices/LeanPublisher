@@ -12,10 +12,9 @@ use ALDIDigitalServices\Zed\LeanPublisher\Business\Resolver\EventHandlerPluginRe
 use ALDIDigitalServices\Zed\LeanPublisher\Business\Resynchronization\Resynchronization;
 use ALDIDigitalServices\Zed\LeanPublisher\Business\Synchronization\Synchronization;
 use ALDIDigitalServices\Zed\LeanPublisher\LeanPublisherDependencyProvider;
-use Pyz\Zed\Event\Business\EventFacadeInterface;
-use Pyz\Zed\Store\Business\StoreFacadeInterface;
 use Spryker\Service\UtilEncoding\UtilEncodingServiceInterface;
 use Spryker\Zed\Kernel\Business\AbstractBusinessFactory;
+use Spryker\Zed\Store\Business\StoreFacadeInterface;
 
 /**
  * @method \ALDIDigitalServices\Zed\LeanPublisher\Persistence\LeanPublisherEntityManagerInterface getEntityManager()
@@ -93,7 +92,6 @@ class LeanPublisherBusinessFactory extends AbstractBusinessFactory
     protected function createMessageTransferManager(): MessageTransferManagerInterface
     {
         return new MessageTransferManager(
-            $this->getEventFacade(),
             $this->getUtilEncodingService()
         );
     }
@@ -109,14 +107,6 @@ class LeanPublisherBusinessFactory extends AbstractBusinessFactory
     }
 
     /**
-     * @return \Pyz\Zed\Event\Business\EventFacadeInterface
-     */
-    protected function getEventFacade(): EventFacadeInterface
-    {
-        return $this->getProvidedDependency(LeanPublisherDependencyProvider::FACADE_EVENT);
-    }
-
-    /**
      * @return \Spryker\Service\UtilEncoding\UtilEncodingServiceInterface
      */
     protected function getUtilEncodingService(): UtilEncodingServiceInterface
@@ -125,7 +115,7 @@ class LeanPublisherBusinessFactory extends AbstractBusinessFactory
     }
 
     /**
-     * @return \Pyz\Zed\Store\Business\StoreFacadeInterface
+     * @return \Spryker\Zed\Store\Business\StoreFacadeInterface
      */
     protected function getStoreFacade(): StoreFacadeInterface
     {

@@ -17,5 +17,8 @@ interface LeanPublisherStoragePublishPluginInterface
      *
      * @return \Generated\Shared\Transfer\LeanPublishAndSynchronizationRequestTransfer
      */
-    public function mapDataForStorage(array $loadedData, LeanPublishAndSynchronizationRequestTransfer $leanPublishAndSynchronizationRequestTransfer): LeanPublishAndSynchronizationRequestTransfer;
+    public function mapDataForStorage(
+        array $loadedData,
+        LeanPublishAndSynchronizationRequestTransfer $leanPublishAndSynchronizationRequestTransfer
+    ): LeanPublishAndSynchronizationRequestTransfer;
 }

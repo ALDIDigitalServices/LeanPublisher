@@ -9,6 +9,8 @@ use Spryker\Zed\Kernel\Communication\AbstractPlugin;
 
 /**
  * @method \ALDIDigitalServices\Zed\LeanPublisher\Communication\LeanPublisherCommunicationFactory getFactory()
+ * @method \ALDIDigitalServices\Zed\LeanPublisher\LeanPublisherConfig getConfig()
+ * @method \ALDIDigitalServices\Zed\LeanPublisher\Business\LeanPublisherFacadeInterface getFacade()
  */
 class StorageSynchronizationPlugin extends AbstractPlugin implements LeanPublisherSynchronizationPluginInterface
 {
@@ -56,7 +58,6 @@ class StorageSynchronizationPlugin extends AbstractPlugin implements LeanPublish
             ->getStorageClient()
             ->setMulti($storageWriteMessages);
     }
-
 
     /**
      * @param array $dataToDelete

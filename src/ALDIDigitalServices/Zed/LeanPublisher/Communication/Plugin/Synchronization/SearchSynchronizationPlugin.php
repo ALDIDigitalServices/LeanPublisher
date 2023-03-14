@@ -11,6 +11,8 @@ use Spryker\Zed\Kernel\Communication\AbstractPlugin;
 
 /**
  * @method \ALDIDigitalServices\Zed\LeanPublisher\Communication\LeanPublisherCommunicationFactory getFactory()
+ * @method \ALDIDigitalServices\Zed\LeanPublisher\LeanPublisherConfig getConfig()
+ * @method \ALDIDigitalServices\Zed\LeanPublisher\Business\LeanPublisherFacadeInterface getFacade()
  */
 class SearchSynchronizationPlugin extends AbstractPlugin implements LeanPublisherSynchronizationPluginInterface
 {

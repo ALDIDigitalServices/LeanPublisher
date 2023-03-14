@@ -6,6 +6,11 @@ use Propel\Runtime\ActiveQuery\ModelCriteria;
 use Propel\Runtime\ActiveRecord\ActiveRecordInterface;
 use Spryker\Zed\Kernel\Persistence\AbstractPersistenceFactory;
 
+/**
+ * @method \ALDIDigitalServices\Zed\LeanPublisher\LeanPublisherConfig getConfig()
+ * @method \ALDIDigitalServices\Zed\LeanPublisher\Persistence\LeanPublisherRepositoryInterface getRepository()
+ * @method \ALDIDigitalServices\Zed\LeanPublisher\Persistence\LeanPublisherEntityManagerInterface getEntityManager()
+ */
 class LeanPublisherPersistenceFactory extends AbstractPersistenceFactory
 {
     /**
@@ -17,7 +22,6 @@ class LeanPublisherPersistenceFactory extends AbstractPersistenceFactory
     {
         return new $queryClass();
     }
-
 
     /**
      * @param string $queryClass

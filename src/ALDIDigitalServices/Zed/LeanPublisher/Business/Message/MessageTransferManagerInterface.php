@@ -47,5 +47,5 @@ interface MessageTransferManagerInterface
      *
      * @return \Generated\Shared\Transfer\EventQueueSendMessageBodyTransfer
      */
-    public function getEventQueueSentMessageBodyTransfer(QueueReceiveMessageTransfer $queueReceiveMessageTransfer): EventQueueSendMessageBodyTransfer;
+    public function getEventQueueSendMessageBodyTransfer(QueueReceiveMessageTransfer $queueReceiveMessageTransfer): EventQueueSendMessageBodyTransfer;
 }

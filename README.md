@@ -108,7 +108,6 @@ Setup the new registered queue via console command.
         <column name="id_MY_ENTITY_publish" required="true" type="INTEGER" autoIncrement="true"
                 primaryKey="true"/>
         <column name="reference" required="true" type="VARCHAR" size="255"/>
-        <column name="id_origin" required="true" type="INTEGER"/>
         <column name="key_search" type="VARCHAR" size="255"/>
         <column name="key_storage" type="VARCHAR" size="255"/>
         <column name="data_search" type="LONGVARCHAR"/>
@@ -118,13 +117,7 @@ Setup the new registered queue via console command.
         <index name="MY_ENTITY_publish-reference">
             <index-column name="reference"/>
         </index>
-        <index name="MY_ENTITY_publish-id_origin">
-            <index-column name="id_origin"/>
-        </index>
 
-        <unique name="MY_ENTITY_publish-unique-id_origin">
-            <unique-column name="id_origin"/>
-        </unique>
         <unique name="MY_ENTITY_publish-unique-key_storage">
             <unique-column name="key_storage"/>
         </unique>

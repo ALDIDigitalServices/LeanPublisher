@@ -20,6 +20,11 @@ class LeanPublisherEntityManager extends AbstractEntityManager implements LeanPu
     protected const COL_REFERENCE = 'reference';
 
     /**
+     * @var string
+     */
+    protected const COL_REFERENCE = 'reference';
+
+    /**
      * @param \Generated\Shared\Transfer\LeanPublishAndSynchronizationRequestTransfer $leanPublishAndSynchronizationRequestTransfer
      *
      * @return void
@@ -80,30 +85,20 @@ class LeanPublisherEntityManager extends AbstractEntityManager implements LeanPu
         }
 
         $references = [];
-        $originIds = [];
         foreach ($publishDataDelete->getData() as $deleteItem) {
-            $originIds[] = $deleteItem->getIdOrigin();
             $references[] = $deleteItem->getReference();
         }
 
-        $originIds = array_filter($originIds);
         $references = array_filter($references);
 
-        if (empty($references) && empty($originIds)) {
+        if (empty($references)) {
             return;
         }
 
         $query = $this->getFactory()->createQueryInstance($leanPublishAndSynchronizationRequestTransfer->getQueryClass());
 
-        if ($originIds) {
-            $idOriginCriterion = $this->createCriterion($query, static::COL_ID_ORIGIN, $this->mapToIntItems($originIds));
-            $query->addOr($idOriginCriterion);
-        }
-
-        if ($references) {
-            $referencesCriterion = $this->createCriterion($query, static::COL_REFERENCE, $references);
-            $query->addOr($referencesCriterion);
-        }
+        $referencesCriterion = $this->createCriterion($query, static::COL_REFERENCE, $references);
+        $query->addOr($referencesCriterion);
 
         $result = $query->find();
 
@@ -130,16 +125,6 @@ class LeanPublisherEntityManager extends AbstractEntityManager implements LeanPu
             $value,
             $comparison
         );
-    }
-
-    /**
-     * @param array $values
-     *
-     * @return int[]
-     */
-    protected function mapToIntItems(array $values): array
-    {
-        return array_map(static fn($value): int => (int)$value, $values);
     }
 
     /**

@@ -9,7 +9,7 @@ use Generated\Shared\Transfer\LeanPublisherEventCollectionTransfer;
 use Generated\Shared\Transfer\LeanPublisherEventTransfer;
 use Orm\Zed\Product\Persistence\Map\SpyProductAbstractTableMap;
 use Orm\Zed\ProductOffer\Persistence\Map\SpyProductOfferTableMap;
-use Pyz\Zed\Product\Dependency\ProductEvents;
+use Spryker\Zed\Product\Dependency\ProductEvents;
 use Spryker\Zed\ProductOffer\Dependency\ProductOfferEvents;
 
 /**
@@ -36,11 +36,12 @@ class MessageTransferManagerTest extends Test
      * @param \Generated\Shared\Transfer\LeanPublisherEventCollectionTransfer $leanPublisherEventCollectionTransfer
      * @param int $expectedCount
      *
-     * @throws \Exception
      * @return void
      */
-    public function testFilterQueueMessageTransferFiltersQueueMessagesByFilterCriteria(LeanPublisherEventCollectionTransfer $leanPublisherEventCollectionTransfer, int $expectedCount): void
-    {
+    public function testFilterQueueMessageTransferFiltersQueueMessagesByFilterCriteria(
+        LeanPublisherEventCollectionTransfer $leanPublisherEventCollectionTransfer,
+        int $expectedCount
+    ): void {
         // arrange
         $eventQueueReceiveMessages = [];
         $eventQueueReceiveMessages[] = $this->tester->buildQueueReceiveMessageTransfer(
@@ -55,14 +56,12 @@ class MessageTransferManagerTest extends Test
             [SpyProductOfferTableMap::COL_CONCRETE_SKU],
         );
 
-
         // act
         $filteredQueueMessageTransfers = $this->tester->getMessageTransferManager()
             ->validateAndFilterQueueMessages(
                 $eventQueueReceiveMessages,
                 $leanPublisherEventCollectionTransfer,
             );
-
 
         // assert
         $this->assertCount($expectedCount, $filteredQueueMessageTransfers->getValidatedMessages());
@@ -101,7 +100,6 @@ class MessageTransferManagerTest extends Test
     }
 
     /**
-     * @throws \Exception
      * @return void
      */
     public function testGroupTransfersByTableGroupsTransfersByTable(): void
@@ -169,9 +167,9 @@ class MessageTransferManagerTest extends Test
             );
 
         return [
-                [$event1, 1,], // expected count after filtering
-                [$event2, 0,], // expected count after filtering
-                [$event3, 2,], // expected count after filtering
+            [$event1, 1], // expected count after filtering
+            [$event2, 0], // expected count after filtering
+            [$event3, 2], // expected count after filtering
         ];
     }
 }

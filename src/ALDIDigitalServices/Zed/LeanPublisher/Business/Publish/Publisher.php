@@ -25,8 +25,9 @@ class Publisher implements PublisherInterface
      *
      * @return \Generated\Shared\Transfer\LeanPublishAndSynchronizationRequestTransfer
      */
-    public function publishData(LeanPublishAndSynchronizationRequestTransfer $leanPublishAndSynchronizationRequestTransfer): LeanPublishAndSynchronizationRequestTransfer
-    {
+    public function publishData(
+        LeanPublishAndSynchronizationRequestTransfer $leanPublishAndSynchronizationRequestTransfer
+    ): LeanPublishAndSynchronizationRequestTransfer {
         $this->entityManager->writePublishData($leanPublishAndSynchronizationRequestTransfer);
         $this->entityManager->deletePublishData($leanPublishAndSynchronizationRequestTransfer);
 

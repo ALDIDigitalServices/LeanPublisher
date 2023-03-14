@@ -59,7 +59,6 @@ class Resynchronization
     /**
      * @param \Generated\Shared\Transfer\LeanPublisherResynchronizationRequestTransfer $leanPublisherResynchronizationRequestTransfer
      *
-     * @throws \Exception
      * @return void
      */
     public function resynchronizeData(LeanPublisherResynchronizationRequestTransfer $leanPublisherResynchronizationRequestTransfer): void

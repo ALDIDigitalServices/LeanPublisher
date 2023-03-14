@@ -53,8 +53,11 @@ trait LeanPublisherEventRegistrationTrait
      *
      * @return void
      */
-    protected function buildEventFilterCollectionTransfer(LeanPublisherEventCollectionTransfer $eventCollectionTransfer, string $eventName, array $eventPropertyMapping = []): void
-    {
+    protected function buildEventFilterCollectionTransfer(
+        LeanPublisherEventCollectionTransfer $eventCollectionTransfer,
+        string $eventName,
+        array $eventPropertyMapping = []
+    ): void {
         $leanPublisherEvent = new LeanPublisherEventTransfer();
         $leanPublisherEvent->setEventName($eventName);
 

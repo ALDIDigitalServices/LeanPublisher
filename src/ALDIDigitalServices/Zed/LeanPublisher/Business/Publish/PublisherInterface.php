@@ -11,5 +11,7 @@ interface PublisherInterface
      *
      * @return \Generated\Shared\Transfer\LeanPublishAndSynchronizationRequestTransfer
      */
-    public function publishData(LeanPublishAndSynchronizationRequestTransfer $leanPublishAndSynchronizationRequestTransfer): LeanPublishAndSynchronizationRequestTransfer;
+    public function publishData(
+        LeanPublishAndSynchronizationRequestTransfer $leanPublishAndSynchronizationRequestTransfer
+    ): LeanPublishAndSynchronizationRequestTransfer;
 }

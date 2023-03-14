@@ -7,6 +7,8 @@ use Spryker\Zed\Kernel\Communication\AbstractPlugin;
 
 /**
  * @method \ALDIDigitalServices\Zed\LeanPublisher\Business\LeanPublisherFacadeInterface getFacade()
+ * @method \ALDIDigitalServices\Zed\LeanPublisher\LeanPublisherConfig getConfig()
+ * @method \ALDIDigitalServices\Zed\LeanPublisher\Communication\LeanPublisherCommunicationFactory getFactory()
  */
 class LeanPublisherEventListener extends AbstractPlugin implements EventBulkHandlerInterface
 {

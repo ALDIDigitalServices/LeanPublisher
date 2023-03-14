@@ -13,7 +13,7 @@ use ALDIDigitalServices\Zed\LeanPublisher\Communication\Plugin\LeanPublisherStor
 use Generated\Shared\Transfer\LeanPublishAndSynchronizationRequestTransfer;
 use Generated\Shared\Transfer\LeanPublisherDataTransfer;
 use Generated\Shared\Transfer\LeanPublisherQueueMessageCollectionTransfer;
-use Pyz\Zed\Store\Business\StoreFacadeInterface;
+use Spryker\Zed\Store\Business\StoreFacadeInterface;
 
 class LeanPublisherEventConsumer implements LeanPublisherEventConsumerInterface
 {
@@ -40,7 +40,7 @@ class LeanPublisherEventConsumer implements LeanPublisherEventConsumerInterface
     protected Synchronization $synchronization;
 
     /**
-     * @var \Pyz\Zed\Store\Business\StoreFacadeInterface
+     * @var \Spryker\Zed\Store\Business\StoreFacadeInterface
      */
     protected StoreFacadeInterface $storeFacade;
 
@@ -49,7 +49,7 @@ class LeanPublisherEventConsumer implements LeanPublisherEventConsumerInterface
      * @param \ALDIDigitalServices\Zed\LeanPublisher\Business\Resolver\EventHandlerPluginResolver $eventHandlerPluginResolver
      * @param \ALDIDigitalServices\Zed\LeanPublisher\Business\Publish\PublisherInterface $leanPublisher
      * @param \ALDIDigitalServices\Zed\LeanPublisher\Business\Synchronization\Synchronization $synchronization
-     * @param \Pyz\Zed\Store\Business\StoreFacadeInterface $storeFacade
+     * @param \Spryker\Zed\Store\Business\StoreFacadeInterface $storeFacade
      */
     public function __construct(
         MessageTransferManagerInterface $messageTransferManager,
@@ -66,11 +66,10 @@ class LeanPublisherEventConsumer implements LeanPublisherEventConsumerInterface
     }
 
     /**
-     * {inheritDoc}
+     * {@inheritDoc}
      *
      * @param array $queueReceiveMessageTransfers
      *
-     * @throws \Exception
      * @return array
      */
     public function processLeanPublisherMessages(array $queueReceiveMessageTransfers): array
@@ -89,10 +88,13 @@ class LeanPublisherEventConsumer implements LeanPublisherEventConsumerInterface
             $leanPublishAndSynchronizationRequest = (new LeanPublishAndSynchronizationRequestTransfer())->setQueryClass($eventHandler->getPublishTableQueryClass());
 
             $leanPublisherQueueMessageCollection = $this->messageTransferManager->setWriteAndDeleteMessages($leanPublisherQueueMessageCollection);
-            $leanPublishAndSynchronizationRequest = $this->addWriteData($leanPublisherQueueMessageCollection, $leanPublishAndSynchronizationRequest, $eventHandler);
-            $leanPublishAndSynchronizationRequest = $this->addDeleteData($leanPublisherQueueMessageCollection, $leanPublishAndSynchronizationRequest, $eventHandler);
+            $leanPublishAndSynchronizationRequest = $this->getData($leanPublisherQueueMessageCollection, $leanPublishAndSynchronizationRequest, $eventHandler);
+
+            $leanPublishAndSynchronizationRequest = $this->addDeleteDataFromQueueMessages($leanPublisherQueueMessageCollection, $leanPublishAndSynchronizationRequest, $eventHandler);
 
             if ($this->hasNoPublishData($leanPublishAndSynchronizationRequest)) {
+                $this->markMessagesAcknowledged($leanPublisherQueueMessageCollection);
+
                 continue;
             }
 
@@ -142,15 +144,15 @@ class LeanPublisherEventConsumer implements LeanPublisherEventConsumerInterface
      *
      * @return \Generated\Shared\Transfer\LeanPublishAndSynchronizationRequestTransfer
      */
-    protected function addWriteData(
+    protected function getData(
         LeanPublisherQueueMessageCollectionTransfer $leanPublisherQueueMessageCollection,
         LeanPublishAndSynchronizationRequestTransfer $leanPublishAndSynchronizationRequest,
         LeanPublisherEventHandlerPluginInterface $eventHandler
     ): LeanPublishAndSynchronizationRequestTransfer {
-        $writeData = $this->loadWriteData($leanPublisherQueueMessageCollection, $eventHandler);
+        $data = $this->loadData($leanPublisherQueueMessageCollection, $eventHandler);
 
-        if ($writeData) {
-            $leanPublishAndSynchronizationRequest = $this->mapWriteData($eventHandler, $writeData, $leanPublishAndSynchronizationRequest);
+        if ($data) {
+            $leanPublishAndSynchronizationRequest = $this->mapData($eventHandler, $data, $leanPublishAndSynchronizationRequest);
         }
 
         return $leanPublishAndSynchronizationRequest;
@@ -163,7 +165,7 @@ class LeanPublisherEventConsumer implements LeanPublisherEventConsumerInterface
      *
      * @return \Generated\Shared\Transfer\LeanPublishAndSynchronizationRequestTransfer
      */
-    protected function addDeleteData(
+    protected function addDeleteDataFromQueueMessages(
         LeanPublisherQueueMessageCollectionTransfer $leanPublisherQueueMessageCollection,
         LeanPublishAndSynchronizationRequestTransfer $leanPublishAndSynchronizationRequest,
         LeanPublisherEventHandlerPluginInterface $eventHandler
@@ -198,15 +200,13 @@ class LeanPublisherEventConsumer implements LeanPublisherEventConsumerInterface
      */
     protected function prepareDeleteMessage($deleteMessage, string $storeName): LeanPublisherDataTransfer
     {
-        $originId = $this->messageTransferManager
-            ->getEventQueueSentMessageBodyTransfer($deleteMessage)
+        $reference = $this->messageTransferManager
+            ->getEventQueueSendMessageBodyTransfer($deleteMessage)
             ->getTransferData()['id'];
 
         return (new LeanPublisherDataTransfer())
             ->setStore($storeName)
-            ->setIdOrigin($originId)
-            ->setReference($originId);
-
+            ->setReference($reference);
     }
 
     /**
@@ -216,7 +216,7 @@ class LeanPublisherEventConsumer implements LeanPublisherEventConsumerInterface
      *
      * @return \Generated\Shared\Transfer\LeanPublishAndSynchronizationRequestTransfer
      */
-    protected function mapWriteData(
+    protected function mapData(
         LeanPublisherEventHandlerPluginInterface $eventHandler,
         array $loadedData,
         LeanPublishAndSynchronizationRequestTransfer $leanPublishAndSynchronizationRequestTransfer
@@ -239,7 +239,7 @@ class LeanPublisherEventConsumer implements LeanPublisherEventConsumerInterface
      *
      * @return array
      */
-    private function loadWriteData(
+    protected function loadData(
         LeanPublisherQueueMessageCollectionTransfer $leanPublisherQueueMessageCollection,
         LeanPublisherEventHandlerPluginInterface $eventHandler
     ): array {
