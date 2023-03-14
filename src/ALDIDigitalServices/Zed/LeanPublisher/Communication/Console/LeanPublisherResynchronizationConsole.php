@@ -11,15 +11,28 @@ use Symfony\Component\Console\Output\OutputInterface;
 /**
  * @method \ALDIDigitalServices\Zed\LeanPublisher\Business\LeanPublisherFacadeInterface getFacade()
  * @method \ALDIDigitalServices\Zed\LeanPublisher\Communication\LeanPublisherCommunicationFactory getFactory()
+ * @method \ALDIDigitalServices\Zed\LeanPublisher\Persistence\LeanPublisherRepositoryInterface getRepository()
  */
 class LeanPublisherResynchronizationConsole extends Console
 {
+    /**
+     * @var string
+     */
     protected const COMMAND_NAME = 'lean-publisher:sync';
 
+    /**
+     * @var string
+     */
     protected const COMMAND_DESCRIPTION = 'Runs synchronization of published entities.';
 
+    /**
+     * @var string
+     */
     protected const RESOURCE = 'resource';
 
+    /**
+     * @var string
+     */
     protected const ENTITY_IDS = 'ids';
 
     /**
@@ -31,7 +44,6 @@ class LeanPublisherResynchronizationConsole extends Console
             ->setName(static::COMMAND_NAME)
             ->setDescription(static::COMMAND_DESCRIPTION)
             ->addUsage($this->getResourcesUsageText());
-
 
         $this->addArgument(
             static::RESOURCE,

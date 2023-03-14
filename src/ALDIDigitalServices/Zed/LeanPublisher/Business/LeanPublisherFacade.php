@@ -7,6 +7,8 @@ use Spryker\Zed\Kernel\Business\AbstractFacade;
 
 /**
  * @method \ALDIDigitalServices\Zed\LeanPublisher\Business\LeanPublisherBusinessFactory getFactory()
+ * @method \ALDIDigitalServices\Zed\LeanPublisher\Persistence\LeanPublisherRepositoryInterface getRepository()
+ * @method \ALDIDigitalServices\Zed\LeanPublisher\Persistence\LeanPublisherEntityManagerInterface getEntityManager()
  */
 class LeanPublisherFacade extends AbstractFacade implements LeanPublisherFacadeInterface
 {
@@ -32,6 +34,7 @@ class LeanPublisherFacade extends AbstractFacade implements LeanPublisherFacadeI
      * @param \Generated\Shared\Transfer\LeanPublisherResynchronizationRequestTransfer $leanPublisherResynchronizationRequestTransfer
      *
      * @throws \Exception
+     *
      * @return void
      */
     public function resynchronizePublishedData(LeanPublisherResynchronizationRequestTransfer $leanPublisherResynchronizationRequestTransfer): void

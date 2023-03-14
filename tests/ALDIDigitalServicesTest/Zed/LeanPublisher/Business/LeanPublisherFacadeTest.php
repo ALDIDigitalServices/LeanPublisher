@@ -32,7 +32,6 @@ class LeanPublisherFacadeTest extends Test
     protected LeanPublisherBusinessTester $tester;
 
     /**
-     * @throws \Exception
      * @return void
      */
     public function testLeanPublisherEventConsumerThrowsExceptionWhenEventHandlerNotFound(): void
@@ -67,7 +66,6 @@ class LeanPublisherFacadeTest extends Test
     }
 
     /**
-     * @throws \Exception
      * @return void
      */
     public function testLeanPublisherEventConsumerThrowsNoExceptionWhenEventHandlerFound(): void
@@ -93,7 +91,6 @@ class LeanPublisherFacadeTest extends Test
     }
 
     /**
-     * @throws \Exception
      * @return void
      */
     public function testLeanPublisherEventConsumerMarksMessageHasErrorWhenBodyIsInvalid(): void
@@ -136,7 +133,6 @@ class LeanPublisherFacadeTest extends Test
     }
 
     /**
-     * @throws \Exception
      * @return void
      */
     public function testLeanPublisherEventConsumerMarksMessagesAcknowledgedWhenNoDataWasFound(): void
@@ -146,7 +142,6 @@ class LeanPublisherFacadeTest extends Test
         $leanPublisherEventHandlerPluginMock
             ->method('getQueueName')
             ->willReturn(LeanPublisherBusinessTester::DEFAULT_QUEUE_NAME);
-
 
         $this->registerForEvent(ProductOfferEvents::ENTITY_SPY_PRODUCT_OFFER_UPDATE, [SpyProductOfferTableMap::COL_APPROVAL_STATUS]);
         $subscribedEventCollection = $this->getEventCollection();
@@ -169,7 +164,6 @@ class LeanPublisherFacadeTest extends Test
         // act
         $processedMessages = $this->tester->getFacade()->processLeanPublisherMessages($eventQueueReceiveMessages);
 
-
         // assert
         /** @var \Generated\Shared\Transfer\QueueReceiveMessageTransfer $processedMessage */
         foreach ($processedMessages as $processedMessage) {
@@ -178,7 +172,6 @@ class LeanPublisherFacadeTest extends Test
     }
 
     /**
-     * @throws \Exception
      * @return void
      */
     public function testMessageIsNotHandledWhenFilterMappingPreventsIt(): void
@@ -215,7 +208,6 @@ class LeanPublisherFacadeTest extends Test
         // act
         $processedMessages = $this->tester->getFacade()->processLeanPublisherMessages($eventQueueReceiveMessages);
 
-
         // assert
         /** @var \Generated\Shared\Transfer\QueueReceiveMessageTransfer $processedMessage */
         foreach ($processedMessages as $processedMessage) {
@@ -224,7 +216,6 @@ class LeanPublisherFacadeTest extends Test
     }
 
     /**
-     * @throws \Exception
      * @return void
      */
     public function testMessagesAreProcessedIfNoFilterMappingIsGiven(): void
@@ -234,7 +225,6 @@ class LeanPublisherFacadeTest extends Test
         $leanPublisherEventHandlerPluginMock
             ->method('getQueueName')
             ->willReturn(LeanPublisherBusinessTester::DEFAULT_QUEUE_NAME);
-
 
         $leanPublisherEventHandlerPluginMock
             ->method('getSubscribedEventCollection')

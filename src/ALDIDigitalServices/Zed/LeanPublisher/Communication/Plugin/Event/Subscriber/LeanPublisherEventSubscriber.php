@@ -11,6 +11,8 @@ use Spryker\Zed\Kernel\Communication\AbstractPlugin;
 
 /**
  * @method \ALDIDigitalServices\Zed\LeanPublisher\Communication\LeanPublisherCommunicationFactory getFactory()
+ * @method \ALDIDigitalServices\Zed\LeanPublisher\LeanPublisherConfig getConfig()
+ * @method \ALDIDigitalServices\Zed\LeanPublisher\Business\LeanPublisherFacadeInterface getFacade()
  */
 class LeanPublisherEventSubscriber extends AbstractPlugin implements EventSubscriberInterface
 {
@@ -43,8 +45,11 @@ class LeanPublisherEventSubscriber extends AbstractPlugin implements EventSubscr
      *
      * @return \Spryker\Zed\Event\Dependency\EventCollectionInterface
      */
-    protected function registerEvents(EventCollectionInterface $eventCollection, LeanPublisherEventCollectionTransfer $eventCollectionTransfer, string $eventQueueName): EventCollectionInterface
-    {
+    protected function registerEvents(
+        EventCollectionInterface $eventCollection,
+        LeanPublisherEventCollectionTransfer $eventCollectionTransfer,
+        string $eventQueueName
+    ): EventCollectionInterface {
         foreach ($eventCollectionTransfer->getEvents() as $eventTransfer) {
             $this->addListener(
                 $eventTransfer->getEventName(),

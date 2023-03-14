@@ -5,6 +5,7 @@ namespace ALDIDigitalServicesTest\Zed\LeanPublisher;
 use ALDIDigitalServices\Zed\LeanPublisher\Business\Message\MessageTransferManager;
 use ALDIDigitalServices\Zed\LeanPublisher\Business\Message\MessageTransferManagerInterface;
 use ALDIDigitalServices\Zed\LeanPublisher\Communication\Plugin\Event\Listeners\LeanPublisherEventListener;
+use Codeception\Actor;
 use Generated\Shared\DataBuilder\QueueReceiveMessageBuilder;
 use Generated\Shared\Transfer\EventEntityTransfer;
 use Generated\Shared\Transfer\EventQueueSendMessageBodyTransfer;
@@ -13,6 +14,7 @@ use Generated\Shared\Transfer\QueueSendMessageTransfer;
 
 /**
  * Inherited Methods
+ *
  * @method void wantToTest($text)
  * @method void wantTo($text)
  * @method void execute($callable)
@@ -27,10 +29,13 @@ use Generated\Shared\Transfer\QueueSendMessageTransfer;
  *
  * @SuppressWarnings(PHPMD)
  */
-class LeanPublisherBusinessTester extends \Codeception\Actor
+class LeanPublisherBusinessTester extends Actor
 {
     use _generated\LeanPublisherBusinessTesterActions;
 
+    /**
+     * @var string
+     */
     public const DEFAULT_QUEUE_NAME = 'queue_name';
 
     /**
@@ -40,15 +45,19 @@ class LeanPublisherBusinessTester extends \Codeception\Actor
      * @param string $queueName
      * @param string $listenerClassName
      *
-     * @throws \Exception
      * @return \Generated\Shared\Transfer\QueueReceiveMessageTransfer
      */
-    public function buildQueueReceiveMessageTransfer(string $event, string $name, array $modifiedColumns, string $queueName = self::DEFAULT_QUEUE_NAME, string $listenerClassName = LeanPublisherEventListener::class): QueueReceiveMessageTransfer
-    {
+    public function buildQueueReceiveMessageTransfer(
+        string $event,
+        string $name,
+        array $modifiedColumns,
+        string $queueName = self::DEFAULT_QUEUE_NAME,
+        string $listenerClassName = LeanPublisherEventListener::class
+    ): QueueReceiveMessageTransfer {
         $builder = new QueueReceiveMessageBuilder();
 
         $eventEntityTransfer = (new EventEntityTransfer())
-            ->setId(\random_int(0, 9999))
+            ->setId(random_int(0, 9999))
             ->setEvent($event)
             ->setName($name)
             ->setModifiedColumns($modifiedColumns);
@@ -74,7 +83,6 @@ class LeanPublisherBusinessTester extends \Codeception\Actor
     public function getMessageTransferManager(): MessageTransferManagerInterface
     {
         return new MessageTransferManager(
-            $this->getLocator()->event()->facade(),
             $this->getLocator()->utilEncoding()->service()
         );
     }

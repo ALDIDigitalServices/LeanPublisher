@@ -4,25 +4,41 @@ namespace ALDIDigitalServices\Zed\LeanPublisher;
 
 use ALDIDigitalServices\Zed\LeanPublisher\Communication\Plugin\Synchronization\SearchSynchronizationPlugin;
 use ALDIDigitalServices\Zed\LeanPublisher\Communication\Plugin\Synchronization\StorageSynchronizationPlugin;
-use Pyz\Zed\Event\Business\EventFacadeInterface;
-use Pyz\Zed\Store\Business\StoreFacadeInterface;
 use Spryker\Client\Search\SearchClientInterface;
 use Spryker\Client\Storage\StorageClientInterface;
 use Spryker\Service\UtilEncoding\UtilEncodingServiceInterface;
 use Spryker\Zed\Kernel\AbstractBundleDependencyProvider;
 use Spryker\Zed\Kernel\Container;
+use Spryker\Zed\Store\Business\StoreFacadeInterface;
 
 class LeanPublisherDependencyProvider extends AbstractBundleDependencyProvider
 {
-    public const FACADE_EVENT = 'FACADE_EVENT';
+    /**
+     * @var string
+     */
     public const FACADE_STORE = 'FACADE_STORE';
 
+    /**
+     * @var string
+     */
     public const CLIENT_SEARCH = 'CLIENT_SEARCH';
+    /**
+     * @var string
+     */
     public const CLIENT_STORAGE = 'CLIENT_STORAGE';
 
+    /**
+     * @var string
+     */
     public const SERVICE_UTIL_ENCODING = 'SERVICE_UTIL_ENCODING';
 
+    /**
+     * @var string
+     */
     public const PLUGINS_EVENT_HANDLER = 'PLUGINS_EVENT_HANDLER';
+    /**
+     * @var string
+     */
     public const PLUGINS_SYNCHRONIZATION = 'PLUGINS_SYNCHRONIZATION';
 
     /**
@@ -32,7 +48,6 @@ class LeanPublisherDependencyProvider extends AbstractBundleDependencyProvider
      */
     public function provideBusinessLayerDependencies(Container $container): Container
     {
-        $container = $this->addEventFacade($container);
         $container = $this->addUtilEncodingService($container);
         $container = $this->addEventHandlerPlugins($container);
         $container = $this->addSynchronizationPlugins($container);
@@ -79,20 +94,6 @@ class LeanPublisherDependencyProvider extends AbstractBundleDependencyProvider
     {
         $container->set(static::PLUGINS_SYNCHRONIZATION, function (): array {
             return $this->getSynchronizationPlugins();
-        });
-
-        return $container;
-    }
-
-    /**
-     * @param \Spryker\Zed\Kernel\Container $container
-     *
-     * @return \Spryker\Zed\Kernel\Container
-     */
-    protected function addEventFacade(Container $container): Container
-    {
-        $container->set(static::FACADE_EVENT, static function (Container $container): EventFacadeInterface {
-            return $container->getLocator()->event()->facade();
         });
 
         return $container;

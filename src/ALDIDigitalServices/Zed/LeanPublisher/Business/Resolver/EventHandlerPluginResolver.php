@@ -24,7 +24,8 @@ class EventHandlerPluginResolver
     /**
      * @param string $queueName
      *
-     * @throws \Exception
+     * @throws \ALDIDigitalServices\Zed\LeanPublisher\Business\Exception\EventHandlerNotFoundException
+     *
      * @return \ALDIDigitalServices\Zed\LeanPublisher\Communication\Plugin\LeanPublisherEventHandlerPluginInterface
      */
     public function getEventHandlerPluginFromQueueName(string $queueName): LeanPublisherEventHandlerPluginInterface
@@ -34,14 +35,16 @@ class EventHandlerPluginResolver
                 return $plugin;
             }
         }
+
         throw new EventHandlerNotFoundException(sprintf('EventHandlerPlugin for queue name \'%s\' not found', $queueName));
     }
 
     /**
      * @param \Generated\Shared\Transfer\LeanPublisherResynchronizationRequestTransfer $leanPublisherReSyncRequestTransfer
      *
-     * @throws \Exception
-     * @return array|\ALDIDigitalServices\Zed\LeanPublisher\Communication\Plugin\LeanPublisherEventHandlerPluginInterface[]
+     * @throws \ALDIDigitalServices\Zed\LeanPublisher\Business\Exception\EventHandlerNotFoundException
+     *
+     * @return \ALDIDigitalServices\Zed\LeanPublisher\Communication\Plugin\LeanPublisherEventHandlerPluginInterface[]
      */
     public function getEventHandlerPluginsByResynchronizationRequest(
         LeanPublisherResynchronizationRequestTransfer $leanPublisherReSyncRequestTransfer

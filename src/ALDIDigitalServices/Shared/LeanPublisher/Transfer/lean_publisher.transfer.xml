@@ -23,7 +23,6 @@
         <property name="keyStorage" type="string"/>
         <property name="store" type="string"/>
         <property name="reference" type="string"/>
-        <property name="idOrigin" type="int" />
     </transfer>
 
     <transfer name="LeanPublisherQueueMessageCollection">

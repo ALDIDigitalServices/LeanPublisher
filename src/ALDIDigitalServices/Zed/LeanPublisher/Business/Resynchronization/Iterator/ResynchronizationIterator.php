@@ -69,7 +69,6 @@ class ResynchronizationIterator implements Iterator
         $this->current = $this->leanPublisherRepository->getResynchronizationData($this->leanPublisherEventHandlerPlugin, $this->ids, $this->offset, $this->chunkSize);
     }
 
-
     /**
      * @return array
      */
