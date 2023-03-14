@@ -16,12 +16,6 @@ class LeanPublisherEntityManager extends AbstractEntityManager implements LeanPu
 {
     use BatchEntityManagerTrait;
 
-    protected const COL_ID_ORIGIN = 'id_origin';
-    protected const COL_REFERENCE = 'reference';
-
-    /**
-     * @var string
-     */
     protected const COL_REFERENCE = 'reference';
 
     /**
